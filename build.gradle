@@ -1,0 +1,59 @@
+buildscript {
+	ext {
+		springBootVersion = '2.2.5.RELEASE'
+		lombokVersion = '1.18.12'
+		swaggerVersion = '2.9.2'
+
+		appVersion = "1.0."
+		buildNumber = (System.getenv("BUILD_NUMBER")?.toString()?.toInteger() ?: 0)
+		appName = 'dynamicdq.jar'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'eclipse-wtp'
+
+version appVersion + buildNumber
+
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+bootJar { archiveName = appName }
+
+task bootJarCustom (type: Copy, dependsOn:bootJar){
+	from "build/libs"
+	into "./build"
+	include (appName)
+}
+configure(bootJarCustom) {
+	group = BasePlugin.BUILD_GROUP
+	description = 'Assembles bootJar task and copy wars to build directory of root project'
+}
+
+configurations.all {
+	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+}
+
+dependencies {
+	springBoot { buildInfo() }
+//	compile project(":spring-dynamicdq-lib")
+	compile('com.airtech:spring-dynamicdq-lib:1.0.2')
+	compile("org.projectlombok:lombok:${lombokVersion}")
+	compile("org.projectlombok:lombok:${lombokVersion}")
+	compile("org.springframework.boot:spring-boot-starter-activemq:${springBootVersion}")
+	compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+	compile("org.springframework.boot:spring-boot-starter-log4j2:${springBootVersion}")
+	compile("org.springframework.boot:spring-boot-starter-data-jdbc:${springBootVersion}")
+	compile("io.springfox:springfox-swagger2:${swaggerVersion}")
+	compile("io.springfox:springfox-swagger-ui:${swaggerVersion}")
+}

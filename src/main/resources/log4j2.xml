@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="APP_NAME">${sys:application.name:-spring-app}</Property>
+        <Property name="LOGS">${sys:logs.location:-./log}</Property>
+        <Property name="LOG_PATTERN">%d{DEFAULT} %6p [%15.15t] %-40.40logger{39} : %m%n</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+<!--            <PatternLayout pattern="%d{HH:mm:ss.SSS} ${hostName} [%mdc{MDCipAddress}] [%X{ipAddress}] [%t] %-5level %logger{36} - %msg%n"/> [%-40.40logger{39}]-->
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+<!--            <JsonLayout properties="true">-->
+<!--                <KeyValuePair key="additionalField2" value="${hostName}"/>-->
+<!--                <KeyValuePair key="additionalField21" value="${k8s:host:-}"/>-->
+<!--            </JsonLayout>-->
+        </Console>
+        <RollingFile name="File"
+                     fileName="${LOGS}/${APP_NAME}.log"
+                     filePattern="${LOGS}/archived/${APP_NAME}-%d{yyyy-MM-dd}.%i.log">
+            <PatternLayout pattern="${LOG_PATTERN}" />
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB" />
+            </Policies>
+            <DefaultRolloverStrategy max="1" />
+        </RollingFile>
+<!--        <JMS name="ActiveMQ"-->
+<!--             destinationBindingName="my.demo.queue"-->
+<!--             factoryName="org.apache.activemq.jndi.ActiveMQInitialContextFactory"-->
+<!--             factoryBindingName="ConnectionFactory"-->
+<!--             providerURL="tcp://10.5.121.117:61616"-->
+<!--             userName="admin"-->
+<!--             password="your_password">-->
+<!--            <JsonLayout properties="true"/>-->
+<!--        </JMS>-->
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+<!--            <AppenderRef ref="ActiveMQ"/>-->
+        </Root>
+    </Loggers>
+</Configuration>
+
+<!--С маслом-->
+<!--Первая неделя по 1-->
+<!--Вторая по 2-->
+<!--С третей по 900-1200-->
