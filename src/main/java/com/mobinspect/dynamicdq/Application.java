@@ -13,14 +13,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 @SpringBootApplication(scanBasePackages = {"com.mobinspect.dynamicdq", "com.airtech.dynamicdq"})
 public class Application {
 
-	@Autowired
-	ConfigService configService;
-
-	@Scheduled(fixedRate = 5000)
-	private void updateConfig(){
-		configService.getConfigs();
-		log.info("updateConfig");
-	}
+//	@Autowired
+//	ConfigService configService;
+//
+//	@Scheduled(fixedRate = 5000)
+//	private void updateConfig(){
+//		configService.getConfigs();
+//		log.info("updateConfig");
+//	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);

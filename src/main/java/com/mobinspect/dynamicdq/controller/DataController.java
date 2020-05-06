@@ -24,34 +24,37 @@ public class DataController {
     @DebugLog
     @PostMapping("/flat/{configName}")
     public ResponseEntity<List<ObjectNode>> getFlatData(@PathVariable String configName, @RequestBody JsonNode filter, Pageable pageable){
-        long startNanos = System.nanoTime();
+//        long startNanos = System.nanoTime();
 
         List<ObjectNode> result = dataService.getFlatData(configName, filter, pageable);
 
-        long stopNanos = System.nanoTime();
-        long lengthMillis = TimeUnit.NANOSECONDS.toMillis(stopNanos - startNanos);
-        log.info("Time duration query: [{}ms]", lengthMillis);
+//        long stopNanos = System.nanoTime();
+//        long lengthMillis = TimeUnit.NANOSECONDS.toMillis(stopNanos - startNanos);
+//        log.info("Time duration query: [{}ms]", lengthMillis);
 
         if(result == null)
             return ResponseEntity.badRequest().build();
-        else
+        else {
+            log.info("Result.size : [{} rows]", result.size());
             return ResponseEntity.ok(result);
+        }
     }
 
     @DebugLog
     @PostMapping("/hierarchical/{configName}")
     public ResponseEntity<List<ObjectNode>> getHierarchicalData(@PathVariable String configName, @RequestBody JsonNode filter, Pageable pageable){
-        long startNanos = System.nanoTime();
+//        long startNanos = System.nanoTime();
 
         List<ObjectNode> result = dataService.getHierarchicalData(configName, filter, pageable);
 
-        long stopNanos = System.nanoTime();
-        long lengthMillis = TimeUnit.NANOSECONDS.toMillis(stopNanos - startNanos);
-        log.info("Time duration query: [{}ms]", lengthMillis);
+//        long stopNanos = System.nanoTime();
+//        long lengthMillis = TimeUnit.NANOSECONDS.toMillis(stopNanos - startNanos);
 
         if(result == null)
             return ResponseEntity.badRequest().build();
-        else
+        else {
+            log.info("Result.size : [{} rows]", result.size());
             return ResponseEntity.ok(result);
+        }
     }
 }
