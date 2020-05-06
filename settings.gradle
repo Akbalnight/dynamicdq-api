@@ -1,10 +1,9 @@
 rootProject.name = 'dynamicdq-api'
 
-sourceControl {
-    gitRepository("https://github.com/air-tech/spring-dynamicdq-lib.git") {
-        producesModule("com.airtech:spring-dynamicdq-lib")
-    }
-}
-//include ':spring-dynamicdq-lib'
-// DYNAMICDQ
-//project(':spring-dynamicdq-lib').projectDir = new File('../spring-dynamicdq-lib')
+//sourceControl {
+//    gitRepository("https://github.com/air-tech/spring-dynamicdq-lib.git") {
+//        producesModule("com.airtech:spring-dynamicdq-lib")
+//    }
+//}
+include ':spring-dynamicdq-lib'
+project(':spring-dynamicdq-lib').projectDir = new File('/Users/anton/Documents/air-tech/spring-dynamicdq-lib')

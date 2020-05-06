@@ -1,8 +1,11 @@
 buildscript {
 	ext {
 		springBootVersion = '2.2.5.RELEASE'
+		springCloudVersion = "2.2.2.RELEASE"
+		springRetryVersion = "1.2.5.RELEASE"
 		lombokVersion = '1.18.12'
 		swaggerVersion = '2.9.2'
+		log4j2version = '2.13.1'
 
 		appVersion = "1.0."
 		buildNumber = (System.getenv("BUILD_NUMBER")?.toString()?.toInteger() ?: 0)
@@ -18,7 +21,6 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-apply plugin: 'eclipse-wtp'
 
 version appVersion + buildNumber
 
@@ -42,14 +44,28 @@ configure(bootJarCustom) {
 
 configurations.all {
 	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+	exclude group: "org.springframework.cloud", module: "spring-cloud-bus"
+	exclude group: "ch.qos.logback", module: "logback-classic"
 }
 
 dependencies {
 	springBoot { buildInfo() }
-//	compile project(":spring-dynamicdq-lib")
-	compile('com.airtech:spring-dynamicdq-lib:1.0.2')
+	compile project(":spring-dynamicdq-lib")
+//	compile('com.airtech:spring-dynamicdq-lib:0.0.3')
 	compile("org.projectlombok:lombok:${lombokVersion}")
-	compile("org.projectlombok:lombok:${lombokVersion}")
+	// Для конфиг сервера
+	compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+	compile("org.springframework.cloud:spring-cloud-starter-config:${springCloudVersion}")
+
+	// Для логов по ссылке
+	compile "org.apache.logging.log4j:log4j-spring-cloud-config-client:${log4j2version}"
+	compile "org.apache.logging.log4j:log4j-api:${log4j2version}"
+	compile "org.apache.logging.log4j:log4j-core:${log4j2version}"
+
+	// Для поиска сервера
+	compile("org.springframework.retry:spring-retry:${springRetryVersion}")
+	compile("org.springframework.boot:spring-boot-starter-aop:${springBootVersion}")
+
 	compile("org.springframework.boot:spring-boot-starter-activemq:${springBootVersion}")
 	compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
 	compile("org.springframework.boot:spring-boot-starter-log4j2:${springBootVersion}")
