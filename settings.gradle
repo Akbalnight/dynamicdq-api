@@ -1,9 +1,16 @@
 rootProject.name = 'dynamicdq-api'
 
-//sourceControl {
-//    gitRepository("https://github.com/air-tech/spring-dynamicdq-lib.git") {
-//        producesModule("com.airtech:spring-dynamicdq-lib")
-//    }
-//}
-include ':spring-dynamicdq-lib'
-project(':spring-dynamicdq-lib').projectDir = new File('/Users/anton/Documents/air-tech/spring-dynamicdq-lib')
+sourceControl {
+    gitRepository("https://github.com/air-tech/spring-dynamicdq-lib.git") {
+        producesModule("com.airtech:spring-dynamicdq-lib")
+    }
+    gitRepository("https://atlassian.dias-dev.ru/bitbucket/scm/common/auth-api.git") {
+        producesModule("com.common:auth-api")
+    }
+}
+
+//include ':spring-dynamicdq-lib'
+//project(':spring-dynamicdq-lib').projectDir = new File('/Users/anton/Documents/air-tech/spring-dynamicdq-lib')
+
+//include ':auth-api'
+//project(':auth-api').projectDir = new File('/Users/anton/Documents/common/auth-api')

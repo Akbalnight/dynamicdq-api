@@ -22,8 +22,8 @@ apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
+group 'com.mobinspect'
 version appVersion + buildNumber
-
 sourceCompatibility = 1.8
 
 repositories {
@@ -50,8 +50,14 @@ configurations.all {
 
 dependencies {
 	springBoot { buildInfo() }
-	compile project(":spring-dynamicdq-lib")
-//	compile('com.airtech:spring-dynamicdq-lib:0.0.3')
+//	compile project(":spring-dynamicdq-lib")
+	implementation ('com.airtech:spring-dynamicdq-lib:0.0.6')
+
+	if (System.getenv("WITH_AUTH")?.toBoolean()){
+//		compile project(":auth-api")
+		implementation ("com.common:auth-api:0.2.0")
+	}
+
 	compile("org.projectlombok:lombok:${lombokVersion}")
 	// Для конфиг сервера
 	compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
@@ -72,4 +78,8 @@ dependencies {
 	compile("org.springframework.boot:spring-boot-starter-data-jdbc:${springBootVersion}")
 	compile("io.springfox:springfox-swagger2:${swaggerVersion}")
 	compile("io.springfox:springfox-swagger-ui:${swaggerVersion}")
+
+	// Logs env
+	println("BUILD_NUMBER ${System.getenv("BUILD_NUMBER")?.toString()}")
+	println("WITH_AUTH ${System.getenv("WITH_AUTH")?.toString()}")
 }
