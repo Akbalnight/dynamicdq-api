@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Log4j2
 @EnableScheduling
-@SpringBootApplication(scanBasePackages = {"com.mobinspect.dynamicdq", "com.airtech.dynamicdq"})
+@SpringBootApplication(scanBasePackages = {"com.mobinspect.dynamicdq", "com.airtech.dynamicdq", "com.common"})
 public class Application {
 
 //	@Autowired
