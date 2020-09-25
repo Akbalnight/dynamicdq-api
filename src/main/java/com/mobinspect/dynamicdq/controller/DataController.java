@@ -4,6 +4,7 @@ import com.airtech.dynamicdq.DebugLog.DebugLog;
 import com.airtech.dynamicdq.service.DataService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +37,19 @@ public class DataController {
             return ResponseEntity.badRequest().build();
         else {
             log.info("Result.size : [{} rows]", result.size());
+            return ResponseEntity.ok(result);
+        }
+    }
+
+    @DebugLog
+    @PostMapping("/flat/count/{configName}")
+    @ApiOperation(value = "Получить кол-во записей в плоской таблице")
+    public ResponseEntity<Long> getFlatDataCount(@PathVariable String configName, @RequestBody JsonNode filter, Pageable pageable){
+        Long result = dataService.getFlatDataCount(configName, filter, pageable);
+        if(result == null)
+            return ResponseEntity.badRequest().build();
+        else {
+            log.info("getFlatDataCount => Result count : [{} rows]", result);
             return ResponseEntity.ok(result);
         }
     }
