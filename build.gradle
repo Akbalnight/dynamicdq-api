@@ -9,7 +9,7 @@ buildscript {
 
 		appVersion = "1.0."
 		buildNumber = (System.getenv("BUILD_NUMBER")?.toString()?.toInteger() ?: 0)
-		appName = (System.getenv("APP_NAME")?.toString()?.toInteger() ?: 'dynamicdq.jar')
+		appName = (System.getenv("APP_NAME")?.toString() ?: 'dynamicdq.jar')
 	}
 	repositories {
 		mavenCentral()
