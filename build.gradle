@@ -9,8 +9,8 @@ buildscript {
 
 		appVersion = "1.0."
 		buildNumber = (System.getenv("BUILD_NUMBER")?.toString()?.toInteger() ?: 0)
-		appName = (System.getenv("APP_NAME")?.toString() ?: 'dynamicdq.jar')
-	}
+		appName = (System.getenv("JAR_NAME")?.toString()?.toString() ?: 'dynamicdq.jar')
+}
 	repositories {
 		mavenCentral()
 	}
@@ -80,6 +80,7 @@ dependencies {
 	compile("io.springfox:springfox-swagger-ui:${swaggerVersion}")
 
 	// Logs env
-	println("BUILD_NUMBER ${System.getenv("BUILD_NUMBER")?.toString()}")
-	println("WITH_AUTH ${System.getenv("WITH_AUTH")?.toString()}")
+	println("BUILD_NUMBER 	[${System.getenv("BUILD_NUMBER")?.toString()}]")
+	println("JAR_NAME 		[${System.getenv("JAR_NAME")?.toString()}]")
+	println("WITH_AUTH 		[${System.getenv("WITH_AUTH")?.toString()}]")
 }
