@@ -2,6 +2,7 @@ package com.mobinspect.dynamicdq.controller;
 
 import com.airtech.dynamicdq.DebugLog.DebugLog;
 import com.airtech.dynamicdq.service.DataService;
+import com.airtech.dynamicdq.service.SaveDataService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.annotations.ApiOperation;
@@ -22,16 +23,14 @@ public class DataController {
     @Autowired
     DataService dataService;
 
+    @Autowired
+    SaveDataService saveDataService;
+
     @DebugLog
     @PostMapping("/flat/{configName}")
     public ResponseEntity<List<ObjectNode>> getFlatData(@PathVariable String configName, @RequestBody JsonNode filter, Pageable pageable){
-//        long startNanos = System.nanoTime();
 
         List<ObjectNode> result = dataService.getFlatData(configName, filter, pageable);
-
-//        long stopNanos = System.nanoTime();
-//        long lengthMillis = TimeUnit.NANOSECONDS.toMillis(stopNanos - startNanos);
-//        log.info("Time duration query: [{}ms]", lengthMillis);
 
         if(result == null)
             return ResponseEntity.badRequest().build();
@@ -57,12 +56,8 @@ public class DataController {
     @DebugLog
     @PostMapping("/hierarchical/{configName}")
     public ResponseEntity<List<ObjectNode>> getHierarchicalData(@PathVariable String configName, @RequestBody JsonNode filter, Pageable pageable){
-//        long startNanos = System.nanoTime();
 
         List<ObjectNode> result = dataService.getHierarchicalData(configName, filter, pageable);
-
-//        long stopNanos = System.nanoTime();
-//        long lengthMillis = TimeUnit.NANOSECONDS.toMillis(stopNanos - startNanos);
 
         if(result == null)
             return ResponseEntity.badRequest().build();
@@ -70,5 +65,17 @@ public class DataController {
             log.info("Result.size : [{} rows]", result.size());
             return ResponseEntity.ok(result);
         }
+    }
+
+    @DebugLog
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/save/{configName}")
+    public ResponseEntity<Object> saveData(@PathVariable String configName, @RequestBody JsonNode dataObject){
+
+        Object result = saveDataService.saveData(configName, dataObject);
+
+        if(result == null)
+            return ResponseEntity.badRequest().build();
+        else
+            return ResponseEntity.ok(result);
     }
 }

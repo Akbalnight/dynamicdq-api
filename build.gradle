@@ -9,7 +9,7 @@ buildscript {
 
 		appVersion = "1.0."
 		buildNumber = (System.getenv("BUILD_NUMBER")?.toString()?.toInteger() ?: 0)
-		appName = 'dynamicdq.jar'
+		appName = (System.getenv("APP_NAME")?.toString()?.toInteger() ?: 'dynamicdq.jar')
 	}
 	repositories {
 		mavenCentral()
@@ -51,7 +51,7 @@ configurations.all {
 dependencies {
 	springBoot { buildInfo() }
 //	compile project(":spring-dynamicdq-lib")
-	implementation ('com.airtech:spring-dynamicdq-lib:0.0.6')
+	implementation ('com.airtech:spring-dynamicdq-lib:0.0.7')
 
 	if (System.getenv("WITH_AUTH")?.toBoolean()){
 //		compile project(":auth-api")
