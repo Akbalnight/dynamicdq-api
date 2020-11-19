@@ -3,17 +3,19 @@ package com.mobinspect.dynamicdq.controller;
 import com.airtech.dynamicdq.DebugLog.DebugLog;
 import com.airtech.dynamicdq.service.DataService;
 import com.airtech.dynamicdq.service.SaveDataService;
+import com.airtech.dynamicdq.service.SaveFileService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Log4j2
 @RestController
@@ -25,6 +27,9 @@ public class DataController {
 
     @Autowired
     SaveDataService saveDataService;
+
+    @Autowired
+    SaveFileService saveFileService;
 
     @DebugLog
     @PostMapping("/flat/{configName}")
@@ -77,5 +82,20 @@ public class DataController {
             return ResponseEntity.badRequest().build();
         else
             return ResponseEntity.ok(result);
+    }
+
+    @PostMapping(value = "/save/file/{configName}", consumes = {"multipart/form-data"})
+    @ApiOperation("Загрузить новый файл")
+    public ResponseEntity<Object> uploadFile(
+            @PathVariable String configName,
+            @RequestPart MultipartFile file,
+            @RequestPart JsonNode dataObject) {
+        return saveFileService.saveFile(configName, file, dataObject);
+    }
+
+    @GetMapping("/file/{configName}/{id}")
+    @ApiOperation("Получить файл")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String configName, @PathVariable String id) {
+        return saveFileService.getFileById(configName, id);
     }
 }
