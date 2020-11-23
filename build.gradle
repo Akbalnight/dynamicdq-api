@@ -51,7 +51,7 @@ configurations.all {
 dependencies {
 	springBoot { buildInfo() }
 //	compile project(":spring-dynamicdq-lib")
-	implementation ('com.airtech:spring-dynamicdq-lib:0.0.15')
+	implementation ('com.airtech:spring-dynamicdq-lib:0.0.16')
 
 	if (System.getenv("WITH_AUTH")?.toBoolean()){
 //		compile project(":auth-api")

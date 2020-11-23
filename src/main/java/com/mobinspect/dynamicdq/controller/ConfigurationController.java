@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Log4j2
@@ -28,14 +29,18 @@ public class ConfigurationController {
 
     @DebugLog
     @GetMapping
-    public List<ConfigTable> getConfigs(@RequestHeader("userId") Long userId){
-        return configService.getConfigs(userId);
+    public List<ConfigTable> getConfigs(@RequestHeader Map<String, String> headers){
+        String userRoles = headers.get("userRoles").replace("[", "\'").replace("]", "\'").replace(", ", "\', \'");
+        return configService.getConfigs(Long.valueOf(headers.get("userid")), userRoles);
     }
 
     @DebugLog
     @GetMapping("/{configName}")
-    public ResponseEntity getConfig(@PathVariable String configName, @RequestHeader("userId") Long userId){
-        ConfigTable table = configService.getConfig(configName, userId);
+    public ResponseEntity getConfig(
+            @PathVariable String configName,
+            @RequestHeader Map<String, String> headers) {
+        String userRoles = headers.get("userRoles").replace("[", "\'").replace("]", "\'").replace(", ", "\', \'");
+        ConfigTable table = configService.getConfig(configName, Long.valueOf(headers.get("userid")), userRoles);
         if(table == null) return ResponseEntity.badRequest().build();
         else return ResponseEntity.ok().body(table);
     }
