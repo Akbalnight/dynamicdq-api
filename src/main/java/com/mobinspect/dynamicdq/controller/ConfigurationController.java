@@ -4,6 +4,7 @@ import com.airtech.dynamicdq.DebugLog.DebugLog;
 import com.airtech.dynamicdq.model.ConfigTable;
 import com.airtech.dynamicdq.model.Db.Field;
 import com.airtech.dynamicdq.model.SaveData.SaveConfig;
+import com.airtech.dynamicdq.repository.utils.Auth;
 import com.airtech.dynamicdq.service.ConfigService;
 import com.airtech.dynamicdq.service.SaveConfigService;
 import com.airtech.dynamicdq.service.SaveDataService;
@@ -30,8 +31,7 @@ public class ConfigurationController {
     @DebugLog
     @GetMapping
     public List<ConfigTable> getConfigs(@RequestHeader Map<String, String> headers){
-        String userRoles = headers.get("userRoles").replace("[", "\'").replace("]", "\'").replace(", ", "\', \'");
-        return configService.getConfigs(Long.valueOf(headers.get("userid")), userRoles);
+        return configService.getConfigs(Auth.getUserId(headers), Auth.getStringUserRoles(headers));
     }
 
     @DebugLog
@@ -39,8 +39,7 @@ public class ConfigurationController {
     public ResponseEntity getConfig(
             @PathVariable String configName,
             @RequestHeader Map<String, String> headers) {
-        String userRoles = headers.get("userRoles").replace("[", "\'").replace("]", "\'").replace(", ", "\', \'");
-        ConfigTable table = configService.getConfig(configName, Long.valueOf(headers.get("userid")), userRoles);
+        ConfigTable table = configService.getConfig(configName, Auth.getUserId(headers), Auth.getStringUserRoles(headers));
         if(table == null) return ResponseEntity.badRequest().build();
         else return ResponseEntity.ok().body(table);
     }
