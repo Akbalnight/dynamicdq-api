@@ -111,9 +111,8 @@ public class DataController {
     @GetMapping("/file/{configName}/{id}")
     @ApiOperation("Получить файл")
     public ResponseEntity<Resource> downloadFile(
-            @RequestHeader Map<String, String> headers,
             @PathVariable String configName,
             @PathVariable String id) {
-        return saveFileService.getFileById(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers), id);
+        return saveFileService.getFileById(configName, 1L, "'ROLE_ADMIN'", id);
     }
 }
