@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.lang.reflect.Array;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -113,6 +115,6 @@ public class DataController {
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String configName,
             @PathVariable String id) {
-        return saveFileService.getFileById(configName, 1L, "'ROLE_ADMIN'", id);
+        return saveFileService.getFileById(configName, 1L, Collections.singletonList("ROLE_ADMIN"), id);
     }
 }
