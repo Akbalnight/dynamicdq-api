@@ -1,7 +1,7 @@
 package com.mobinspect.dynamicdq.controller;
 
 import com.airtech.dynamicdq.DebugLog.DebugLog;
-import com.airtech.dynamicdq.repository.utils.Auth;
+import com.airtech.dynamicdq.utils.Auth;
 import com.airtech.dynamicdq.service.DataService;
 import com.airtech.dynamicdq.service.SaveDataService;
 import com.airtech.dynamicdq.service.SaveFileService;
@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
