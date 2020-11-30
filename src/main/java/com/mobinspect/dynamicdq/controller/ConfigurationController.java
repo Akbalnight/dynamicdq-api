@@ -69,14 +69,14 @@ public class ConfigurationController {
 
     @DebugLog
     @GetMapping("/save")
-    public List<SaveConfig> getSaveConfigs(@RequestHeader("userId") Long userId){
-        return saveConfigService.getConfigs(userId);
+    public List<SaveConfig> getSaveConfigs(@RequestHeader Map<String, String> headers){
+        return saveConfigService.getConfigs(Auth.getUserId(headers), Auth.getListUserRoles(headers));
     }
 
     @DebugLog
     @GetMapping("/save/{configName}")
-    public SaveConfig getSaveConfigByName(@PathVariable String configName, @RequestHeader("userId") Long userId){
-        return saveConfigService.getConfig(configName, userId);
+    public SaveConfig getSaveConfigByName(@PathVariable String configName, @RequestHeader Map<String, String> headers){
+        return saveConfigService.getConfig(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers));
     }
 
     @DebugLog
