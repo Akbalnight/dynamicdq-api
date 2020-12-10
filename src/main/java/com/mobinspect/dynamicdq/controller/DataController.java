@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Log4j2
 @RestController
@@ -114,6 +115,6 @@ public class DataController {
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String configName,
             @PathVariable String id) {
-        return saveFileService.getFileById(configName, 1L, Collections.singletonList("ROLE_ADMIN"), id);
+        return saveFileService.getFileById(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), id);
     }
 }

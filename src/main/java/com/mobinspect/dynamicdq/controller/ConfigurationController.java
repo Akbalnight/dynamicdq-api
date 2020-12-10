@@ -30,7 +30,7 @@ public class ConfigurationController {
     @DebugLog
     @GetMapping
     public List<ConfigTable> getConfigs(@RequestHeader Map<String, String> headers){
-        return configService.getConfigs(Auth.getUserId(headers), Auth.getStringUserRoles(headers));
+        return configService.getConfigs(Auth.getUserId(headers), Auth.getListUserRoles(headers));
     }
 
     @DebugLog
@@ -38,7 +38,7 @@ public class ConfigurationController {
     public ResponseEntity getConfig(
             @PathVariable String configName,
             @RequestHeader Map<String, String> headers) {
-        ConfigTable table = configService.getConfig(configName, Auth.getUserId(headers), Auth.getStringUserRoles(headers));
+        ConfigTable table = configService.getConfig(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers));
         if(table == null) return ResponseEntity.badRequest().build();
         else return ResponseEntity.ok().body(table);
     }
