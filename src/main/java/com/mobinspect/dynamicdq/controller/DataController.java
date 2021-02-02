@@ -1,10 +1,10 @@
 package com.mobinspect.dynamicdq.controller;
 
-import com.airtech.dynamicdq.DebugLog.DebugLog;
-import com.airtech.dynamicdq.utils.Auth;
-import com.airtech.dynamicdq.service.DataService;
-import com.airtech.dynamicdq.service.SaveDataService;
-import com.airtech.dynamicdq.service.SaveFileService;
+import com.irontechspace.dynamicdq.DebugLog.DebugLog;
+import com.irontechspace.dynamicdq.utils.Auth;
+import com.irontechspace.dynamicdq.service.DataService;
+import com.irontechspace.dynamicdq.service.SaveDataService;
+import com.irontechspace.dynamicdq.service.SaveFileService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.annotations.ApiOperation;

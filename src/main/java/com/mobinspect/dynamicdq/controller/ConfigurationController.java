@@ -1,12 +1,12 @@
 package com.mobinspect.dynamicdq.controller;
 
-import com.airtech.dynamicdq.DebugLog.DebugLog;
-import com.airtech.dynamicdq.model.ConfigTable;
-import com.airtech.dynamicdq.model.Db.Field;
-import com.airtech.dynamicdq.model.SaveData.SaveConfig;
-import com.airtech.dynamicdq.utils.Auth;
-import com.airtech.dynamicdq.service.ConfigService;
-import com.airtech.dynamicdq.service.SaveConfigService;
+import com.irontechspace.dynamicdq.DebugLog.DebugLog;
+import com.irontechspace.dynamicdq.model.ConfigTable;
+import com.irontechspace.dynamicdq.model.Db.Field;
+import com.irontechspace.dynamicdq.model.SaveData.SaveConfig;
+import com.irontechspace.dynamicdq.utils.Auth;
+import com.irontechspace.dynamicdq.service.ConfigService;
+import com.irontechspace.dynamicdq.service.SaveConfigService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

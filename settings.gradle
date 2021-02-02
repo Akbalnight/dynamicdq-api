@@ -1,8 +1,8 @@
 rootProject.name = 'dynamicdq-api'
 
 sourceControl {
-    gitRepository("https://github.com/air-tech/spring-dynamicdq-lib.git") {
-        producesModule("com.airtech:spring-dynamicdq-lib")
+    gitRepository("https://github.com/iron-tech-space/spring-dynamicdq-lib.git") {
+        producesModule("com.irontechspace:spring-dynamicdq-lib")
     }
     gitRepository("https://atlassian.dias-dev.ru/bitbucket/scm/common/auth-api.git") {
         producesModule("com.common:auth-api")
