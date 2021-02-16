@@ -91,7 +91,7 @@ public class RepeaterService {
         if (e.getIsAvailable()) {
             // При создании не заданы последняя дата и максимальное кол-во повторений
             if (e.getFinalCount() == 0 && e.getDateFinish() == null) {
-                return true;
+                return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
             } else if (e.getDateFinish() != null) { // Задана последняя дата
                 if (e.getDateFinish().isAfter(e.getNextExecution())) {
                     return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
