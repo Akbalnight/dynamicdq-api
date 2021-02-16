@@ -11,6 +11,6 @@ sourceControl {
 
 //include ':spring-dynamicdq-lib'
 //project(':spring-dynamicdq-lib').projectDir = new File('/Users/anton/Documents/Projects/air-tech/spring-dynamicdq-lib')
-
+//
 //include ':auth-api'
-//project(':auth-api').projectDir = new File('/Users/anton/Documents/common/auth-api')
+//project(':auth-api').projectDir = new File('/Users/anton/Documents/Projects/common/auth-api')
