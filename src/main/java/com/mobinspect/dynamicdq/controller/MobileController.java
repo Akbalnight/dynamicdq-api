@@ -4,26 +4,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
-import com.irontechspace.dynamicdq.model.ConfigTable;
 import com.irontechspace.dynamicdq.service.DataService;
 import com.irontechspace.dynamicdq.service.SaveDataService;
+import com.irontechspace.dynamicdq.service.SaveFileService;
 import com.irontechspace.dynamicdq.utils.Auth;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Log4j2
 @RestController
@@ -34,6 +29,9 @@ public class MobileController {
 
     @Autowired
     SaveDataService saveDataService;
+
+    @Autowired
+    SaveFileService saveFileService;
 
     @DebugLog
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/detours")
@@ -50,6 +48,66 @@ public class MobileController {
                     return ResponseEntity.ok(result);
             } else
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Невозможно сохранить обход. Требуется заморозить обход");
+        } else
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать обходы");
+    }
+
+    @DebugLog
+    @Transactional
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/saveDefects")
+    public ResponseEntity<Object> saveDefects(
+            @RequestHeader Map<String, String> headers,
+            @RequestPart MultipartFile[] files, @RequestPart JsonNode defectObject) {
+
+        Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject);
+
+        if (files != null) {
+            for (MultipartFile file : files) {
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode fileData = mapper.createObjectNode();
+
+                fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
+
+                saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
+            }
+        }
+
+        return ResponseEntity.ok(result);
+    }
+
+    @DebugLog
+    @Transactional
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/updateDefects")
+    public ResponseEntity<Object> updateDefects(
+            @RequestHeader Map<String, String> headers,
+            @RequestPart MultipartFile[] files, @RequestPart JsonNode defectObject) {
+        if (defectObject.get("id") != null && defectObject.get("id").asText() != null && !defectObject.get("id").asText().isEmpty()) {
+
+            ObjectNode defect = getObjectById("mobileDefects", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject.get("id").asText());
+
+            if (defectObject.get("statusProcessId") != null) {
+                defect.set("statusProcessId", defectObject.get("statusProcessId"));
+            }
+
+            if (defectObject.get("extraData") != null) {
+                defect.set("extraData", defectObject.get("extraData"));
+            }
+
+            Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
+
+            if (files != null) {
+                for (MultipartFile file : files) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    ObjectNode fileData = mapper.createObjectNode();
+
+                    fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
+
+                    saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
+                }
+            }
+
+            return ResponseEntity.ok(result);
+
         } else
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать обходы");
     }
