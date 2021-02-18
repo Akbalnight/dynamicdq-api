@@ -18,10 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Log4j2
 @RestController
@@ -57,7 +54,7 @@ public class MobileController {
 
     @DebugLog
     @Transactional
-    @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/defects")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/saveDefects")
     public ResponseEntity<Object> saveDefects(
             @RequestHeader Map<String, String> headers,
             @RequestPart MultipartFile[] files, @RequestPart JsonNode defectObject) {
@@ -76,6 +73,43 @@ public class MobileController {
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    @DebugLog
+    @Transactional
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/updateDefects")
+    public ResponseEntity<Object> updateDefects(
+            @RequestHeader Map<String, String> headers,
+            @RequestPart MultipartFile[] files, @RequestPart JsonNode defectObject) {
+        if (defectObject.get("id") != null && defectObject.get("id").asText() != null && !defectObject.get("id").asText().isEmpty()) {
+
+            ObjectNode defect = getObjectById("mobileDefects", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject.get("id").asText());
+
+            if (defectObject.get("statusProcessId") != null) {
+                defect.set("statusProcessId", defectObject.get("statusProcessId"));
+            }
+
+            if (defectObject.get("extraData") != null) {
+                defect.set("extraData", defectObject.get("extraData"));
+            }
+
+            Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
+
+            if (files != null) {
+                for (MultipartFile file : files) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    ObjectNode fileData = mapper.createObjectNode();
+
+                    fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
+
+                    saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
+                }
+            }
+
+            return ResponseEntity.ok(result);
+
+        } else
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать обходы");
     }
 
     private ObjectNode getObjectById(String configName, UUID userId, List<String> userRoles, String id) {
