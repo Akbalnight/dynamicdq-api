@@ -2,6 +2,8 @@ package com.mobinspect.dynamicdq.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
 import com.irontechspace.dynamicdq.service.DataService;
@@ -33,12 +35,14 @@ public class MobileController {
     @Autowired
     SaveFileService saveFileService;
 
+    final ObjectMapper mapper = new ObjectMapper();
+
     @DebugLog
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/detours")
     public ResponseEntity<Object> saveDetours(
             @RequestHeader Map<String, String> headers,
             @RequestBody JsonNode dataObject) {
-        if(dataObject.get("id") != null && dataObject.get("id").asText() != null && !dataObject.get("id").asText().isEmpty()) {
+        if (dataObject.get("id") != null && dataObject.get("id").asText() != null && !dataObject.get("id").asText().isEmpty()) {
             ObjectNode detour = getObjectById("mobileDetours", Auth.getUserId(headers), Auth.getListUserRoles(headers), dataObject.get("id").asText());
             if (detour.get("frozen") != null && detour.get("frozen").asBoolean()) {
                 Object result = saveDataService.saveData("mobileDetoursSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), dataObject);
@@ -59,15 +63,16 @@ public class MobileController {
             @RequestHeader Map<String, String> headers,
             @RequestPart MultipartFile[] files, @RequestPart JsonNode defectObject) {
 
+        if (defectObject.get("id") != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет обновлять дефекты");
+        }
+
         Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject);
 
+        ObjectNode fileData = mapper.createObjectNode();
+        fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
         if (files != null) {
             for (MultipartFile file : files) {
-                ObjectMapper mapper = new ObjectMapper();
-                ObjectNode fileData = mapper.createObjectNode();
-
-                fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
-
                 saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
             }
         }
@@ -90,18 +95,28 @@ public class MobileController {
             }
 
             if (defectObject.get("extraData") != null) {
-                defect.set("extraData", defectObject.get("extraData"));
+
+                ArrayNode extraData;
+                if (defect.get("extraData").getNodeType() == JsonNodeType.ARRAY) {
+                    extraData = (ArrayNode) defect.get("extraData");
+                    extraData.add(defectObject.get("extraData"));
+
+                    defect.set("extraData", extraData);
+                } else {
+                    extraData = mapper.createArrayNode();
+                    extraData.add(defectObject.get("extraData"));
+
+                    defect.set("extraData", extraData);
+                }
             }
 
             Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
 
+            ObjectNode fileData = mapper.createObjectNode();
+            fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
+
             if (files != null) {
                 for (MultipartFile file : files) {
-                    ObjectMapper mapper = new ObjectMapper();
-                    ObjectNode fileData = mapper.createObjectNode();
-
-                    fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
-
                     saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
                 }
             }
@@ -112,7 +127,7 @@ public class MobileController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать обходы");
     }
 
-    private ObjectNode getObjectById (String configName, UUID userId, List<String> userRoles, String id) {
+    private ObjectNode getObjectById(String configName, UUID userId, List<String> userRoles, String id) {
         ObjectNode filter = new ObjectMapper().createObjectNode();
         filter.put("id", id);
 
@@ -123,10 +138,10 @@ public class MobileController {
 
         List<ObjectNode> result = dataService.getFlatData(configName, userId, userRoles, filter, PageRequest.of(0, 1));
 
-        if(result.size() == 0) {
+        if (result.size() == 0) {
             String msg = String.format("Объект не найден. Сonfig Name: [%s]. Filter: [%s]", configName, filter.toString());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
-        } else if(result.size() > 1) {
+        } else if (result.size() > 1) {
             String msg = String.format("По данному фильтру найдено слишком много файлов. Сonfig Name: [%s]. Filter: [%s]", configName, filter.toString());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         } else {
