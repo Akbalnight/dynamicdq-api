@@ -2,6 +2,8 @@ package com.mobinspect.dynamicdq.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
 import com.irontechspace.dynamicdq.service.DataService;
@@ -33,6 +35,8 @@ public class MobileController {
     @Autowired
     SaveFileService saveFileService;
 
+    final ObjectMapper mapper = new ObjectMapper();
+
     @DebugLog
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/detours")
     public ResponseEntity<Object> saveDetours(
@@ -59,15 +63,16 @@ public class MobileController {
             @RequestHeader Map<String, String> headers,
             @RequestPart MultipartFile[] files, @RequestPart JsonNode defectObject) {
 
+        if (defectObject.get("id") != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет обновлять дефекты");
+        }
+
         Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject);
 
+        ObjectNode fileData = mapper.createObjectNode();
+        fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
         if (files != null) {
             for (MultipartFile file : files) {
-                ObjectMapper mapper = new ObjectMapper();
-                ObjectNode fileData = mapper.createObjectNode();
-
-                fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
-
                 saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
             }
         }
@@ -90,18 +95,28 @@ public class MobileController {
             }
 
             if (defectObject.get("extraData") != null) {
-                defect.set("extraData", defectObject.get("extraData"));
+
+                ArrayNode extraData;
+                if (defect.get("extraData").getNodeType() == JsonNodeType.ARRAY) {
+                    extraData = (ArrayNode) defect.get("extraData");
+                    extraData.add(defectObject.get("extraData"));
+
+                    defect.set("extraData", extraData);
+                } else {
+                    extraData = mapper.createArrayNode();
+                    extraData.add(defectObject.get("extraData"));
+
+                    defect.set("extraData", extraData);
+                }
             }
 
             Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
 
+            ObjectNode fileData = mapper.createObjectNode();
+            fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
+
             if (files != null) {
                 for (MultipartFile file : files) {
-                    ObjectMapper mapper = new ObjectMapper();
-                    ObjectNode fileData = mapper.createObjectNode();
-
-                    fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
-
                     saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
                 }
             }
