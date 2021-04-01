@@ -1,5 +1,6 @@
 package com.mobinspect.dynamicdq.model.repeater;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.mobinspect.dynamicdq.model.ConfigName;
 import com.mobinspect.dynamicdq.model.PeriodName;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -23,9 +25,9 @@ public class Repeater {
     //Итоговый счёт
     private Integer interval;
     // Дата, до которой выполняется команда
-    private LocalDateTime dateFinish;
+    private OffsetDateTime dateFinish;
     // Следущая дата выполнения комманды
-    private LocalDateTime nextExecution;
+    private OffsetDateTime nextExecution;
     // Текущий счёт
     private Integer currentCount;
     //Итоговый счёт
@@ -36,4 +38,8 @@ public class Repeater {
     private UUID userId;
     //Роль
     private String role;
+    //JSON с данными
+    private JsonNode data;
+    //Значение checkbox
+    private Integer checkboxValue;
 }
