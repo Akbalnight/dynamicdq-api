@@ -97,17 +97,19 @@ public class MobileController {
             if (defectObject.get("extraData") != null) {
 
                 ArrayNode extraData;
+                String username = getUserName(headers);
+                ObjectNode addExtraData = (ObjectNode)defectObject.get("extraData");
+                addExtraData.put("staffDetectId", String.valueOf(Auth.getUserId(headers)));
+                addExtraData.put("username", username);
+
                 if (defect.get("extraData").getNodeType() == JsonNodeType.ARRAY) {
                     extraData = (ArrayNode) defect.get("extraData");
-                    extraData.add(defectObject.get("extraData"));
-
-                    defect.set("extraData", extraData);
                 } else {
                     extraData = mapper.createArrayNode();
-                    extraData.add(defectObject.get("extraData"));
-
-                    defect.set("extraData", extraData);
                 }
+
+                extraData.add(addExtraData);
+                defect.set("extraData", extraData);
             }
 
             Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
@@ -124,7 +126,11 @@ public class MobileController {
             return ResponseEntity.ok(result);
 
         } else
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать обходы");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать дефект");
+    }
+
+    public static String getUserName(Map<String, String> headers) {
+        return headers.get("userName");
     }
 
     private ObjectNode getObjectById(String configName, UUID userId, List<String> userRoles, String id) {
