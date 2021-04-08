@@ -92,6 +92,7 @@ public class MobileController {
 
             if (defectObject.get("statusProcessId") != null) {
                 defect.set("statusProcessId", defectObject.get("statusProcessId"));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не указан статус дефекта [statusProcessId]");
             }
 
             if (defectObject.get("extraData") != null) {
@@ -99,6 +100,7 @@ public class MobileController {
                 ArrayNode extraData;
                 String username = getUserName(headers);
                 ObjectNode addExtraData = (ObjectNode)defectObject.get("extraData");
+                addExtraData.set("statusProcessId", defectObject.get("statusProcessId"));
                 addExtraData.put("staffDetectId", String.valueOf(Auth.getUserId(headers)));
                 addExtraData.put("username", username);
 
@@ -107,24 +109,25 @@ public class MobileController {
                 } else {
                     extraData = mapper.createArrayNode();
                 }
-
                 extraData.add(addExtraData);
+
                 defect.set("extraData", extraData);
-            }
 
-            Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
+                Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
 
-            ObjectNode fileData = mapper.createObjectNode();
-            fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
+                ObjectNode fileData = mapper.createObjectNode();
+                fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
 
-            if (files != null) {
-                for (MultipartFile file : files) {
-                    saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
+                if (files != null) {
+                    for (MultipartFile file : files) {
+                        saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
+                    }
                 }
+                return ResponseEntity.ok(result);
+
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не указаны дополнительные данные по дефекту [extraData]");
             }
-
-            return ResponseEntity.ok(result);
-
         } else
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать дефект");
     }
