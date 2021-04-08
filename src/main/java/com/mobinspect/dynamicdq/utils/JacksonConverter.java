@@ -30,11 +30,11 @@ public class JacksonConverter {
         return mapper.treeToValue(node, c);
     }
 
-    @Bean
-    public MultipartConfigElement multipartConfigElement() {
-        MultipartConfigFactory factory = new MultipartConfigFactory();
-        factory.setMaxFileSize(DataSize.ofMegabytes(100));
-        factory.setMaxRequestSize(DataSize.ofMegabytes(100));
-        return factory.createMultipartConfig();
-    }
+//    @Bean
+//    public MultipartConfigElement multipartConfigElement() {
+//        MultipartConfigFactory factory = new MultipartConfigFactory();
+//        factory.setMaxFileSize(DataSize.ofMegabytes(100));
+//        factory.setMaxRequestSize(DataSize.ofMegabytes(100));
+//        return factory.createMultipartConfig();
+//    }
 }
