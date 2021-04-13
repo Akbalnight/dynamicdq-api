@@ -67,8 +67,7 @@ public class RepeaterService {
             if (e.getNextExecution() != null) {
                 e.setNextExecution(createNextDateExecution(e));
             }
-
-            if (e.getCurrentCount() != null) {
+            if (e.getFinalCount() != null && e.getFinalCount() > 0) {
                 e.setCurrentCount(e.getCurrentCount() + 1);
             }
         } else {
@@ -89,11 +88,11 @@ public class RepeaterService {
             // При создании не заданы последняя дата и максимальное кол-во повторений
             if (e.getFinalCount() == 0 && e.getDateFinish() == null) {
                 return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
-            } else if ((e.getDateFinish() != null) && (e.getCheckboxValue() == 1)) { // Задана последняя дата
+            } else if ((e.getDateFinish() != null) && (Objects.equals(e.getRepeaterType(), "02"))) { // Задана последняя дата
                 if (e.getDateFinish().isAfter(e.getNextExecution())) {
                     return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
                 }
-            } else if ((e.getFinalCount() != 0) && (e.getCheckboxValue() == 2)) {// Задано максимальное кол-во повторений
+            } else if ((e.getFinalCount() != 0) && (Objects.equals(e.getRepeaterType(), "03"))) {// Задано максимальное кол-во повторений
                 if (e.getFinalCount() >= e.getCurrentCount()) {
                     return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
                 }
@@ -134,40 +133,85 @@ public class RepeaterService {
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        String GET_DETOURS = "detours";
-        List<ObjectNode> results = dataService.getFlatData(GET_DETOURS, e.getUserId(), new ArrayList<String>(
-                Collections.singletonList(e.getRole())), nodeFilter, PageRequest.of(0, 10));
-
-        ObjectNode result = results.get(0);
-        Detour d = mapper.treeToValue(result, Detour.class);
-
-        LocalDateTime dateStartPlan = d.getDateStartPlan().toLocalDateTime()
-                .withDayOfMonth(LocalDateTime.now().getDayOfMonth())
-                .withMonth(LocalDateTime.now().getMonth().getValue())
-                .withYear(LocalDateTime.now().getYear());
-
-        LocalDateTime dateFinishPlan = d.getDateFinishPlan().toLocalDateTime()
-                .withDayOfMonth(LocalDateTime.now().getDayOfMonth())
-                .withMonth(LocalDateTime.now().getMonth().getValue())
-                .withYear(LocalDateTime.now().getYear());
-
-        DetourNodeDto dto = mapper.convertValue(d, DetourNodeDto.class);
-        dto.setDateStartPlan(setOffsetDateTimeValue(dateStartPlan));
-        dto.setDateFinishPlan(setOffsetDateTimeValue(dateFinishPlan));
+        DetourNodeDto dto = new DetourNodeDto();
         dto.setId(null);
 
         if (e.getData() != null) {
             JsonNode actualObj = e.getData();
 
-            dto.setSaveOrderControlPoints(actualObj.get("saveOrderControlPoints").asBoolean());
-            dto.setTakeIntoAccountTimeLocation(actualObj.get("takeIntoAccountTimeLocation").asBoolean());
-            dto.setTakeIntoAccountDateStart(actualObj.get("takeIntoAccountDateStart").asBoolean());
-            dto.setTakeIntoAccountDateFinish(actualObj.get("takeIntoAccountDateFinish").asBoolean());
+            if ((actualObj.get("detourBeginTime") != null) && (actualObj.get("detourEndTime") != null)) {
 
-            dto.setPossibleDeviationLocationTime(actualObj.get("possibleDeviationLocationTime").asInt());
-            dto.setPossibleDeviationDateStart(actualObj.get("possibleDeviationLocationTime").asInt());
-            dto.setPossibleDeviationDateFinish(actualObj.get("possibleDeviationLocationTime").asInt());
+                OffsetDateTime beginDateTime = OffsetDateTime.parse(actualObj.get("detourBeginTime").asText());
+                OffsetDateTime endDateTime = OffsetDateTime.parse(actualObj.get("detourEndTime").asText());
 
+                // Время начала и окончания обхода
+                OffsetTime beginTime = beginDateTime.toOffsetTime();
+                OffsetTime endTime = endDateTime.toOffsetTime();
+
+                // Устанавливем дату и время обхода(дата - текущее число, время - введенное пользователем)
+                LocalDate currentDate = LocalDate.now();
+                OffsetDateTime offsetBeginDateTime = beginTime.atDate(currentDate);
+                OffsetDateTime offsetEndDateTime = endTime.atDate(currentDate);
+
+                //Если время начала > времени окончания дату окончания обхода увеличиваем на сутки
+                if (beginTime.isAfter(endTime)) {
+                    offsetEndDateTime = offsetEndDateTime.plusDays(1);
+                }
+
+                dto.setDateStartPlan(offsetBeginDateTime.toString());
+                dto.setDateFinishPlan(offsetEndDateTime.toString());
+            }
+
+
+            if (actualObj.get("name") != null) {
+                dto.setName(actualObj.get("name").asText());
+            }
+
+            if (actualObj.get("routeId") != null) {
+                dto.setRouteId(UUID.fromString(actualObj.get("routeId").asText()));
+            }
+
+            if (actualObj.get("staffId") != null) {
+                dto.setStaffId(UUID.fromString(actualObj.get("staffId").asText()));
+            }
+
+            if (e.getId() != null) {
+                dto.setRepeaterId(e.getId());
+            }
+
+            if (actualObj.get("saveOrderControlPoints") != null) {
+                dto.setSaveOrderControlPoints(actualObj.get("saveOrderControlPoints").asBoolean());
+            }
+
+            if (actualObj.get("takeIntoAccountTimeLocation") != null) {
+                dto.setTakeIntoAccountTimeLocation(actualObj.get("takeIntoAccountTimeLocation").asBoolean());
+            }
+
+            if (actualObj.get("takeIntoAccountDateStart") != null) {
+                dto.setTakeIntoAccountDateStart(actualObj.get("takeIntoAccountDateStart").asBoolean());
+            }
+
+            if (actualObj.get("takeIntoAccountDateFinish") != null) {
+                dto.setTakeIntoAccountDateFinish(actualObj.get("takeIntoAccountDateFinish").asBoolean());
+            }
+
+            if (actualObj.get("possibleDeviationLocationTime") != null) {
+                dto.setPossibleDeviationLocationTime(actualObj.get("possibleDeviationLocationTime").asInt());
+            }
+
+            if (actualObj.get("possibleDeviationLocationTime") != null) {
+                dto.setPossibleDeviationDateStart(actualObj.get("possibleDeviationLocationTime").asInt());
+            }
+
+            if (actualObj.get("possibleDeviationLocationTime") != null) {
+                dto.setPossibleDeviationDateFinish(actualObj.get("possibleDeviationLocationTime").asInt());
+            }
+
+            if (e.getStatusId() != null) {
+                dto.setStatusId(e.getStatusId());
+            }
+
+            dto.setStatusId(UUID.fromString("23782817-aa16-447a-ad65-bf3bf47ac3b7"));
         }
 
         JsonNode detourNode = mapper.valueToTree(dto);

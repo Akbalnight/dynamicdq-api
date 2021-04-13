@@ -1,6 +1,8 @@
 package com.mobinspect.dynamicdq.model.repeater;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.mobinspect.dynamicdq.model.ConfigName;
 import com.mobinspect.dynamicdq.model.PeriodName;
 import lombok.AllArgsConstructor;
@@ -25,8 +27,10 @@ public class Repeater {
     //Итоговый счёт
     private Integer interval;
     // Дата, до которой выполняется команда
+    @JsonSerialize(using = CustomDateSerializer.class)
     private OffsetDateTime dateFinish;
     // Следущая дата выполнения комманды
+    @JsonSerialize(using = CustomDateSerializer.class)
     private OffsetDateTime nextExecution;
     // Текущий счёт
     private Integer currentCount;
@@ -41,5 +45,7 @@ public class Repeater {
     //JSON с данными
     private JsonNode data;
     //Значение checkbox
-    private Integer checkboxValue;
+    private String repeaterType;
+
+    private UUID statusId;
 }
