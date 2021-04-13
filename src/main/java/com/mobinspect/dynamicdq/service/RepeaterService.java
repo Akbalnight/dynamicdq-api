@@ -5,22 +5,19 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.irontechspace.dynamicdq.service.DataService;
 import com.irontechspace.dynamicdq.service.SaveDataService;
 import com.mobinspect.dynamicdq.model.detour.Detour;
 import com.mobinspect.dynamicdq.model.detour.DetourNodeDto;
-import com.mobinspect.dynamicdq.model.repeater.DtoToRepeaterConverter;
 import com.mobinspect.dynamicdq.model.repeater.Repeater;
-import com.mobinspect.dynamicdq.model.repeater.RepeaterNodeDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 
 @Service
@@ -34,19 +31,24 @@ public class RepeaterService {
         this.saveDataService = saveDataService;
     }
 
-    @Scheduled(cron = "${cron.timeset}")
+
+    @Scheduled(cron = "${job.cron.rate}")
     @Transactional
     public void createRepeatableRows() throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
 
-        String GET_REPEATER = "mobileGetRepeaterData";
+
+        // Получение всех repeaters
+        String GET_REPEATER = "repeaters";
         List<ObjectNode> results = dataService.getFlatData(GET_REPEATER, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), new ArrayList<String>(
                 Collections.singletonList("ROLE_ADMIN")), null, PageRequest.of(0, 10));
 
         for (ObjectNode result : results) {
-            RepeaterNodeDto dto = objectMapper.treeToValue(result, RepeaterNodeDto.class);
-            Repeater e = DtoToRepeaterConverter.convertDtoToRepeater(dto);
+            Repeater e = objectMapper.treeToValue(result, Repeater.class);
             boolean check = checkRepeater(e);
+
             if (check) {
                 switch (e.getConfigName()) {
                     case detours:
@@ -60,27 +62,21 @@ public class RepeaterService {
 
     private void updateRepeaterRow(Repeater e, boolean check, ObjectMapper objectMapper) {
 
-        RepeaterNodeDto dto = DtoToRepeaterConverter.convertRepeaterToDto(e);
-        if (dto.getDateFinish() != null) {
-            dto.setDateFinish(setOffsetDateTimeValue(e.getDateFinish()));
-        }
-
         if (check) {
-            dto.setIsAvailable(true);
+            e.setIsAvailable(true);
             if (e.getNextExecution() != null) {
-                dto.setNextExecution(setOffsetDateTimeValue(createNextDateExecution(e)));
+                e.setNextExecution(createNextDateExecution(e));
             }
-
-            if (e.getCurrentCount() != null) {
-                dto.setCurrentCount(e.getCurrentCount() + 1);
+            if (e.getFinalCount() != null && e.getFinalCount() > 0) {
+                e.setCurrentCount(e.getCurrentCount() + 1);
             }
         } else {
-            dto.setIsAvailable(false);
+            e.setIsAvailable(false);
         }
 
-        JsonNode repeaterNode = objectMapper.valueToTree(dto);
+        JsonNode repeaterNode = objectMapper.valueToTree(e);
 
-        String SAVE_REPEATER = "mobileRepeaterDataSave";
+        String SAVE_REPEATER = "repeaterDataSave";
         saveDataService.saveData(SAVE_REPEATER, e.getUserId(), new ArrayList<String>(
                 Collections.singletonList(e.getRole())), repeaterNode);
 
@@ -88,15 +84,15 @@ public class RepeaterService {
 
     private boolean checkRepeater(Repeater e) {
 
-        if (e.getIsAvailable()) {
+        if ((e.getIsAvailable()) && (e.getNextExecution() != null)) {
             // При создании не заданы последняя дата и максимальное кол-во повторений
             if (e.getFinalCount() == 0 && e.getDateFinish() == null) {
                 return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
-            } else if (e.getDateFinish() != null) { // Задана последняя дата
+            } else if ((e.getDateFinish() != null) && (Objects.equals(e.getRepeaterType(), "02"))) { // Задана последняя дата
                 if (e.getDateFinish().isAfter(e.getNextExecution())) {
                     return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
                 }
-            } else if (e.getFinalCount() != 0) {// Задано максимальное кол-во повторений
+            } else if ((e.getFinalCount() != 0) && (Objects.equals(e.getRepeaterType(), "03"))) {// Задано максимальное кол-во повторений
                 if (e.getFinalCount() >= e.getCurrentCount()) {
                     return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
                 }
@@ -106,22 +102,21 @@ public class RepeaterService {
         return false;
     }
 
-    private LocalDateTime createNextDateExecution(Repeater e) {
-        LocalDateTime currentDate = e.getNextExecution();
-        LocalDateTime nextDate = currentDate;
+    private OffsetDateTime createNextDateExecution(Repeater e) {
+        OffsetDateTime nextDate = e.getNextExecution();
 
         switch (e.getPeriodName()) {
             case day:
-                nextDate = currentDate.plusDays(e.getInterval());
+                nextDate = e.getNextExecution().plusDays(e.getInterval());
                 break;
             case week:
-                nextDate = currentDate.plusWeeks(e.getInterval());
+                nextDate = e.getNextExecution().plusWeeks(e.getInterval());
                 break;
             case month:
-                nextDate = currentDate.plusMonths(e.getInterval());
+                nextDate = e.getNextExecution().plusMonths(e.getInterval());
                 break;
             case year:
-                nextDate = currentDate.plusYears(e.getInterval());
+                nextDate = e.getNextExecution().plusYears(e.getInterval());
                 break;
             default:
                 break;
@@ -138,31 +133,90 @@ public class RepeaterService {
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        String GET_DETOURS = "mobileGetDetoursData";
-        List<ObjectNode> results = dataService.getFlatData(GET_DETOURS, e.getUserId(), new ArrayList<String>(
-                Collections.singletonList(e.getRole())), nodeFilter, PageRequest.of(0, 10));
-
-        ObjectNode result = results.get(0);
-        Detour d = mapper.treeToValue(result, Detour.class);
-
-        LocalDateTime dateStartPlan = d.getDateStartPlan().toLocalDateTime()
-                .withDayOfMonth(LocalDateTime.now().getDayOfMonth())
-                .withMonth(LocalDateTime.now().getMonth().getValue())
-                .withYear(LocalDateTime.now().getYear());
-
-        LocalDateTime dateFinishPlan = d.getDateFinishPlan().toLocalDateTime()
-                .withDayOfMonth(LocalDateTime.now().getDayOfMonth())
-                .withMonth(LocalDateTime.now().getMonth().getValue())
-                .withYear(LocalDateTime.now().getYear());
-
-        DetourNodeDto dto = mapper.convertValue(d, DetourNodeDto.class);
-        dto.setDateStartPlan(setOffsetDateTimeValue(dateStartPlan));
-        dto.setDateFinishPlan(setOffsetDateTimeValue(dateFinishPlan));
+        DetourNodeDto dto = new DetourNodeDto();
         dto.setId(null);
+
+        if (e.getData() != null) {
+            JsonNode actualObj = e.getData();
+
+            if ((actualObj.get("detourBeginTime") != null) && (actualObj.get("detourEndTime") != null)) {
+
+                OffsetDateTime beginDateTime = OffsetDateTime.parse(actualObj.get("detourBeginTime").asText());
+                OffsetDateTime endDateTime = OffsetDateTime.parse(actualObj.get("detourEndTime").asText());
+
+                // Время начала и окончания обхода
+                OffsetTime beginTime = beginDateTime.toOffsetTime();
+                OffsetTime endTime = endDateTime.toOffsetTime();
+
+                // Устанавливем дату и время обхода(дата - текущее число, время - введенное пользователем)
+                LocalDate currentDate = LocalDate.now();
+                OffsetDateTime offsetBeginDateTime = beginTime.atDate(currentDate);
+                OffsetDateTime offsetEndDateTime = endTime.atDate(currentDate);
+
+                //Если время начала > времени окончания дату окончания обхода увеличиваем на сутки
+                if (beginTime.isAfter(endTime)) {
+                    offsetEndDateTime = offsetEndDateTime.plusDays(1);
+                }
+
+                dto.setDateStartPlan(offsetBeginDateTime.toString());
+                dto.setDateFinishPlan(offsetEndDateTime.toString());
+            }
+
+
+            if (actualObj.get("name") != null) {
+                dto.setName(actualObj.get("name").asText());
+            }
+
+            if (actualObj.get("routeId") != null) {
+                dto.setRouteId(UUID.fromString(actualObj.get("routeId").asText()));
+            }
+
+            if (actualObj.get("staffId") != null) {
+                dto.setStaffId(UUID.fromString(actualObj.get("staffId").asText()));
+            }
+
+            if (e.getId() != null) {
+                dto.setRepeaterId(e.getId());
+            }
+
+            if (actualObj.get("saveOrderControlPoints") != null) {
+                dto.setSaveOrderControlPoints(actualObj.get("saveOrderControlPoints").asBoolean());
+            }
+
+            if (actualObj.get("takeIntoAccountTimeLocation") != null) {
+                dto.setTakeIntoAccountTimeLocation(actualObj.get("takeIntoAccountTimeLocation").asBoolean());
+            }
+
+            if (actualObj.get("takeIntoAccountDateStart") != null) {
+                dto.setTakeIntoAccountDateStart(actualObj.get("takeIntoAccountDateStart").asBoolean());
+            }
+
+            if (actualObj.get("takeIntoAccountDateFinish") != null) {
+                dto.setTakeIntoAccountDateFinish(actualObj.get("takeIntoAccountDateFinish").asBoolean());
+            }
+
+            if (actualObj.get("possibleDeviationLocationTime") != null) {
+                dto.setPossibleDeviationLocationTime(actualObj.get("possibleDeviationLocationTime").asInt());
+            }
+
+            if (actualObj.get("possibleDeviationLocationTime") != null) {
+                dto.setPossibleDeviationDateStart(actualObj.get("possibleDeviationLocationTime").asInt());
+            }
+
+            if (actualObj.get("possibleDeviationLocationTime") != null) {
+                dto.setPossibleDeviationDateFinish(actualObj.get("possibleDeviationLocationTime").asInt());
+            }
+
+            if (e.getStatusId() != null) {
+                dto.setStatusId(e.getStatusId());
+            }
+
+            dto.setStatusId(UUID.fromString("23782817-aa16-447a-ad65-bf3bf47ac3b7"));
+        }
 
         JsonNode detourNode = mapper.valueToTree(dto);
 
-        String SAVE_DETOURS = "mobileDetoursSave";
+        String SAVE_DETOURS = "saveDetourForm";
         saveDataService.saveData(SAVE_DETOURS, e.getUserId(), new ArrayList<String>(
                 Collections.singletonList(e.getRole())), detourNode);
     }

@@ -1,12 +1,12 @@
 package com.mobinspect.dynamicdq.model.detour;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -19,10 +19,8 @@ public class Detour {
     private UUID routeId;
     private UUID staffId;
     private UUID repeaterId;
-    @JsonFormat(timezone="Europe/Moscow")
-    private Timestamp dateStartPlan;
-    @JsonFormat(timezone="Europe/Moscow")
-    private Timestamp dateFinishPlan;
+    private OffsetDateTime dateStartPlan;
+    private OffsetDateTime dateFinishPlan;
     private Timestamp dateStartFact;
     private Timestamp dateFinishFact;
     private boolean saveOrderControlPoints;
