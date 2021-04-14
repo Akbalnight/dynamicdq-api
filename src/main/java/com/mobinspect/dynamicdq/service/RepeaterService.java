@@ -233,7 +233,7 @@ public class RepeaterService {
         }
 
         JsonNode detourNode = mapper.valueToTree(dto);
-        log.info("Create Detours by repeater \nDATA: [{}]", detourNode.toString());
+        log.info("Create Detours by repeater config: [{}] User: [{}] Roles: [{}]\nDATA: [{}]", SAVE_DETOURS, e.getUserId(), Collections.singletonList(e.getRole()), detourNode.toString());
         saveDataService.saveData(SAVE_DETOURS, e.getUserId(), Collections.singletonList(e.getRole()), detourNode);
     }
 }
