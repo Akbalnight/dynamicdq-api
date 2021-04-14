@@ -11,6 +11,7 @@ import com.irontechspace.dynamicdq.service.SaveDataService;
 import com.mobinspect.dynamicdq.model.detour.Detour;
 import com.mobinspect.dynamicdq.model.detour.DetourNodeDto;
 import com.mobinspect.dynamicdq.model.repeater.Repeater;
+import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,18 +25,21 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+@Log4j2
 @Service
 public class RepeaterService {
 
     private final DataService dataService;
     private final SaveDataService saveDataService;
+    private final static String GET_REPEATER = "repeaters";
+    private final static String SAVE_REPEATER = "repeaterDataSave";
+    private final static String SAVE_DETOURS = "saveDetourForm";
 
     public RepeaterService(DataService dataService, SaveDataService saveDataService) {
         this.dataService = dataService;
         this.saveDataService = saveDataService;
     }
 
-    private static final Logger logger = LogManager.getLogger();
 
     @Scheduled(cron = "${job.cron.rate}")
     @Transactional
@@ -44,10 +48,9 @@ public class RepeaterService {
                 .registerModule(new JavaTimeModule())
                 .configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
 
-        logger.info("Starting at " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        log.info("Starting at " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // Получение всех repeaters
-        String GET_REPEATER = "repeaters";
         List<ObjectNode> results = dataService.getFlatData(GET_REPEATER, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), new ArrayList<String>(
                 Collections.singletonList("ROLE_ADMIN")), null, PageRequest.of(0, 10));
 
@@ -82,7 +85,6 @@ public class RepeaterService {
 
         JsonNode repeaterNode = objectMapper.valueToTree(e);
 
-        String SAVE_REPEATER = "repeaterDataSave";
         saveDataService.saveData(SAVE_REPEATER, e.getUserId(), new ArrayList<String>(
                 Collections.singletonList(e.getRole())), repeaterNode);
 
@@ -231,9 +233,7 @@ public class RepeaterService {
         }
 
         JsonNode detourNode = mapper.valueToTree(dto);
-
-        String SAVE_DETOURS = "saveDetourForm";
-        saveDataService.saveData(SAVE_DETOURS, e.getUserId(), new ArrayList<String>(
-                Collections.singletonList(e.getRole())), detourNode);
+        log.info("Create Detours by repeater \nDATA: [{}]", detourNode.toString());
+        saveDataService.saveData(SAVE_DETOURS, e.getUserId(), Collections.singletonList(e.getRole()), detourNode);
     }
 }
