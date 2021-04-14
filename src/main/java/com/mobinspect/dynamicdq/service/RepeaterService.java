@@ -11,6 +11,8 @@ import com.irontechspace.dynamicdq.service.SaveDataService;
 import com.mobinspect.dynamicdq.model.detour.Detour;
 import com.mobinspect.dynamicdq.model.detour.DetourNodeDto;
 import com.mobinspect.dynamicdq.model.repeater.Repeater;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -31,6 +35,7 @@ public class RepeaterService {
         this.saveDataService = saveDataService;
     }
 
+    private static final Logger logger = LogManager.getLogger();
 
     @Scheduled(cron = "${job.cron.rate}")
     @Transactional
@@ -39,6 +44,7 @@ public class RepeaterService {
                 .registerModule(new JavaTimeModule())
                 .configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
 
+        logger.info("Starting at " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // Получение всех repeaters
         String GET_REPEATER = "repeaters";
@@ -87,18 +93,26 @@ public class RepeaterService {
         if ((e.getIsAvailable()) && (e.getNextExecution() != null)) {
             // При создании не заданы последняя дата и максимальное кол-во повторений
             if (e.getFinalCount() == 0 && e.getDateFinish() == null) {
-                return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
+                return isValidDate(e);
             } else if ((e.getDateFinish() != null) && (Objects.equals(e.getRepeaterType(), "02"))) { // Задана последняя дата
                 if (e.getDateFinish().isAfter(e.getNextExecution())) {
-                    return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
+                    return isValidDate(e);
                 }
             } else if ((e.getFinalCount() != 0) && (Objects.equals(e.getRepeaterType(), "03"))) {// Задано максимальное кол-во повторений
                 if (e.getFinalCount() >= e.getCurrentCount()) {
-                    return e.getNextExecution().toLocalDate().isEqual(LocalDate.now());
+                    return isValidDate(e);
                 }
             }
         }
 
+        return false;
+    }
+
+    private Boolean isValidDate(Repeater e) {
+        if (e.getNextExecution().toLocalDate().isEqual(LocalDate.now())) {
+            long minDiff = OffsetDateTime.now().until(e.getNextExecution(), ChronoUnit.MINUTES);
+            return ((minDiff <= 10) && (minDiff >= 0));
+        }
         return false;
     }
 
