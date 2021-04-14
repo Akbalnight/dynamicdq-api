@@ -110,9 +110,11 @@ public class RepeaterService {
 
     private Boolean isValidDate(Repeater e) {
         if (e.getNextExecution().toLocalDate().isEqual(LocalDate.now())) {
-            long minDiff = OffsetDateTime.now().until(e.getNextExecution(), ChronoUnit.MINUTES);
-            return ((minDiff <= 10) && (minDiff >= 0));
+
+            return ((OffsetDateTime.now().until(e.getNextExecution(), ChronoUnit.MINUTES) <= 10)
+                    && (OffsetDateTime.now().until(e.getNextExecution(), ChronoUnit.MINUTES) >= 0));
         }
+        
         return false;
     }
 
@@ -233,11 +235,5 @@ public class RepeaterService {
         String SAVE_DETOURS = "saveDetourForm";
         saveDataService.saveData(SAVE_DETOURS, e.getUserId(), new ArrayList<String>(
                 Collections.singletonList(e.getRole())), detourNode);
-    }
-
-    private String setOffsetDateTimeValue(LocalDateTime localDateTime) {
-        ZoneId zone = ZoneId.of("Europe/Moscow");
-        ZoneOffset zoneOffSet = zone.getRules().getOffset(localDateTime);
-        return localDateTime.atOffset(zoneOffSet).toString();
     }
 }
