@@ -12,15 +12,15 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DetourNodeDto {
-    private UUID id;
+//    private UUID id;
     private String name;
     private UUID routeId;
     private UUID staffId;
     private UUID repeaterId;
     private String dateStartPlan;
     private String dateFinishPlan;
-    private String dateStartFact;
-    private String dateFinishFact;
+//    private String dateStartFact;
+//    private String dateFinishFact;
     private boolean saveOrderControlPoints;
     private boolean takeIntoAccountTimeLocation;
     private boolean takeIntoAccountDateStart;
@@ -28,6 +28,6 @@ public class DetourNodeDto {
     private Integer possibleDeviationLocationTime;
     private Integer possibleDeviationDateStart;
     private Integer possibleDeviationDateFinish;
-    private Integer code;
+//    private Integer code;
     private UUID statusId;
 }

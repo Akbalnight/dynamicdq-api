@@ -152,7 +152,7 @@ public class RepeaterService {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         DetourNodeDto dto = new DetourNodeDto();
-        dto.setId(null);
+//        dto.setId(null);
 
         if (e.getData() != null) {
             JsonNode actualObj = e.getData();
