@@ -90,17 +90,19 @@ public class RepeaterService {
 
     private boolean checkRepeater(Repeater e) {
 
-        if ((e.getIsAvailable()) && (e.getNextExecution() != null)) {
-            // При создании не заданы последняя дата и максимальное кол-во повторений
-            if (e.getFinalCount() == 0 && e.getDateFinish() == null) {
-                return isValidDate(e);
-            } else if ((e.getDateFinish() != null) && (Objects.equals(e.getRepeaterType(), "02"))) { // Задана последняя дата
-                if (e.getDateFinish().isAfter(e.getNextExecution())) {
+        if ((e.getIsAvailable()) && (e.getNextExecution() != null) && (e.getDateStart() != null)) {
+            if (OffsetDateTime.now().isAfter(e.getDateStart())) {
+                // При создании не заданы последняя дата и максимальное кол-во повторений
+                if (e.getFinalCount() == 0 && e.getDateFinish() == null) {
                     return isValidDate(e);
-                }
-            } else if ((e.getFinalCount() != 0) && (Objects.equals(e.getRepeaterType(), "03"))) {// Задано максимальное кол-во повторений
-                if (e.getFinalCount() >= e.getCurrentCount()) {
-                    return isValidDate(e);
+                } else if ((e.getDateFinish() != null) && (Objects.equals(e.getRepeaterType(), "02"))) { // Задана последняя дата
+                    if (e.getDateFinish().isAfter(e.getNextExecution())) {
+                        return isValidDate(e);
+                    }
+                } else if ((e.getFinalCount() != 0) && (Objects.equals(e.getRepeaterType(), "03"))) {// Задано максимальное кол-во повторений
+                    if (e.getFinalCount() >= e.getCurrentCount()) {
+                        return isValidDate(e);
+                    }
                 }
             }
         }
@@ -114,7 +116,7 @@ public class RepeaterService {
             return ((OffsetDateTime.now().until(e.getNextExecution(), ChronoUnit.MINUTES) <= 10)
                     && (OffsetDateTime.now().until(e.getNextExecution(), ChronoUnit.MINUTES) >= 0));
         }
-        
+
         return false;
     }
 

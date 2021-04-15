@@ -26,6 +26,9 @@ public class Repeater {
     private PeriodName periodName;
     //Итоговый счёт
     private Integer interval;
+    // Дата, начала выполнения обходов
+    @JsonSerialize(using = CustomDateSerializer.class)
+    private OffsetDateTime dateStart;
     // Дата, до которой выполняется команда
     @JsonSerialize(using = CustomDateSerializer.class)
     private OffsetDateTime dateFinish;
