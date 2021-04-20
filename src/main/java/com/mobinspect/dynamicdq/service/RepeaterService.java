@@ -8,22 +8,34 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.irontechspace.dynamicdq.service.DataService;
 import com.irontechspace.dynamicdq.service.SaveDataService;
-import com.mobinspect.dynamicdq.model.detour.Detour;
 import com.mobinspect.dynamicdq.model.detour.DetourNodeDto;
 import com.mobinspect.dynamicdq.model.repeater.Repeater;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.io.FileUtils;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.time.*;
+import java.io.*;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 
 @Log4j2
 @Service
@@ -35,9 +47,89 @@ public class RepeaterService {
     private final static String SAVE_REPEATER = "repeaterDataSave";
     private final static String SAVE_DETOURS = "saveDetourForm";
 
+    @Value("${dynamicdq.files.dir}")
+    private String rootDir;
+
     public RepeaterService(DataService dataService, SaveDataService saveDataService) {
         this.dataService = dataService;
         this.saveDataService = saveDataService;
+    }
+
+    public ResponseEntity<byte[]> getFileByIds(String configName, UUID userId, List<String> userRoles, String[] ids) throws IOException {
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(byteArrayOutputStream);
+        ZipOutputStream zipOutputStream = new ZipOutputStream(bufferedOutputStream);
+
+        ObjectNode filter = (new ObjectMapper()).createObjectNode();
+        List<ObjectNode> fileDates = new ArrayList<>();
+
+        for (String id : ids) {
+            filter.put("id", id);
+            List<ObjectNode> files = this.dataService.getFlatData(configName, userId, userRoles, filter, PageRequest.of(0, 1));
+            if (files.size() == 0) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+            } else if (files.size() > 1) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "По данной ID найдено слишком много файлов");
+            } else {
+                ObjectNode fileData = (ObjectNode) files.get(0);
+                String fileAbsolutePath = Paths.get(this.rootDir, fileData.get("path").asText()).toAbsolutePath().toString();
+                fileDates.add(fileData);
+                byte[] content = this.getContent(fileAbsolutePath);
+                File file;
+                FileUtils.writeByteArrayToFile(file = new File(fileAbsolutePath), content);
+
+                FileInputStream fileInputStream = new FileInputStream(file);
+                ZipEntry zipEntry = new ZipEntry(fileData.get("name").asText());
+                zipOutputStream.putNextEntry(zipEntry);
+                IOUtils.copy(fileInputStream, zipOutputStream);
+                zipOutputStream.closeEntry();
+            }
+        }
+        zipOutputStream.closeEntry();
+        bufferedOutputStream.close();
+        byteArrayOutputStream.close();
+
+        zipOutputStream.finish();
+        zipOutputStream.flush();
+        IOUtils.closeQuietly(zipOutputStream);
+        IOUtils.closeQuietly(bufferedOutputStream);
+        IOUtils.closeQuietly(byteArrayOutputStream);
+
+        return ResponseEntity.ok()
+                .header(CONTENT_DISPOSITION, "attachment;filename=" + "download.zip")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(byteArrayOutputStream.toByteArray());
+    }
+
+    private byte[] getContent(String filePath) throws IOException {
+        FileInputStream contentStream = new FileInputStream(new File(filePath));
+        Throwable var3 = null;
+
+        byte[] var5;
+        try {
+            byte[] content = new byte[contentStream.available()];
+            contentStream.read(content);
+            var5 = content;
+        } catch (Throwable var14) {
+            var3 = var14;
+            throw var14;
+        } finally {
+            if (contentStream != null) {
+                if (var3 != null) {
+                    try {
+                        contentStream.close();
+                    } catch (Throwable var13) {
+                        var3.addSuppressed(var13);
+                    }
+                } else {
+                    contentStream.close();
+                }
+            }
+
+        }
+
+        return var5;
     }
 
 

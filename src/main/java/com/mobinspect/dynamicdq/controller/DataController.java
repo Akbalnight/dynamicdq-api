@@ -7,6 +7,7 @@ import com.irontechspace.dynamicdq.service.SaveDataService;
 import com.irontechspace.dynamicdq.service.SaveFileService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mobinspect.dynamicdq.service.RepeaterService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,9 @@ public class DataController {
 
     @Autowired
     SaveFileService saveFileService;
+
+    @Autowired
+    RepeaterService repeaterService;
 
     @DebugLog
     @PostMapping("/flat/{configName}")
@@ -116,5 +121,15 @@ public class DataController {
             @PathVariable String configName,
             @PathVariable String id) {
         return saveFileService.getFileById(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), id);
+    }
+
+    @PostMapping("/file/zip/{configName}")
+    @ApiOperation("Получить файл")
+    public ResponseEntity<byte[]> downloadZip(
+            @PathVariable String configName,
+            @RequestBody String[] ids) throws IOException {
+        return repeaterService.getFileByIds(configName,
+                UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"),
+                Collections.singletonList("ROLE_ADMIN"), ids);
     }
 }
