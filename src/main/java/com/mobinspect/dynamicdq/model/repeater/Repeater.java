@@ -1,6 +1,7 @@
 package com.mobinspect.dynamicdq.model.repeater;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.mobinspect.dynamicdq.model.ConfigName;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Repeater {
     private UUID id;
     // Наименование конфига(detours, routes, ...)
