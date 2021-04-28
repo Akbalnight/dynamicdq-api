@@ -60,6 +60,7 @@ public class RepeaterService {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(byteArrayOutputStream);
         ZipOutputStream zipOutputStream = new ZipOutputStream(bufferedOutputStream);
+        List<String> zipNames = new ArrayList<>();
 
         ObjectNode filter = (new ObjectMapper()).createObjectNode();
         List<ObjectNode> fileDates = new ArrayList<>();
@@ -81,6 +82,11 @@ public class RepeaterService {
 
                 FileInputStream fileInputStream = new FileInputStream(file);
                 ZipEntry zipEntry = new ZipEntry(fileData.get("name").asText());
+
+                if (zipNames.contains(zipEntry.getName())) {
+                    zipEntry = new ZipEntry(createEntryName(fileData));
+                }
+                zipNames.add(zipEntry.getName());
                 zipOutputStream.putNextEntry(zipEntry);
                 IOUtils.copy(fileInputStream, zipOutputStream);
                 zipOutputStream.closeEntry();
@@ -100,6 +106,15 @@ public class RepeaterService {
                 .header(CONTENT_DISPOSITION, "attachment;filename=" + "download.zip")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(byteArrayOutputStream.toByteArray());
+    }
+
+    private String createEntryName(ObjectNode fileData) {
+        String firstNameWithoutExtension = fileData.get("name").asText().substring(0, fileData.get("name").asText().length() - 4);
+        String separator = "_";
+        String lastName = fileData.get("id").asText();
+        String extension = fileData.get("name").asText().substring(fileData.get("name").asText().length() - 4);
+
+        return firstNameWithoutExtension + separator + lastName + extension;
     }
 
     private byte[] getContent(String filePath) throws IOException {
