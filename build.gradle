@@ -56,7 +56,7 @@ dependencies {
 
 	if (System.getenv("WITH_AUTH")?.toBoolean()){
 //		compile project(":auth-api")
-		implementation ("com.common:auth-api:0.2.1")
+		implementation ("com.common:auth-api:0.2.2")
 	}
 
 	compile("org.projectlombok:lombok:${lombokVersion}")

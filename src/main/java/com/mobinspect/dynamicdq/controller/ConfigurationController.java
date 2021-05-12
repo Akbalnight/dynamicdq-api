@@ -38,7 +38,7 @@ public class ConfigurationController {
     public ResponseEntity getConfig(
             @PathVariable String configName,
             @RequestHeader Map<String, String> headers) {
-        ConfigTable table = configService.getConfig(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers));
+        ConfigTable table = configService.getConfigByConfigName(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers));
         if(table == null) return ResponseEntity.badRequest().build();
         else return ResponseEntity.ok().body(table);
     }
