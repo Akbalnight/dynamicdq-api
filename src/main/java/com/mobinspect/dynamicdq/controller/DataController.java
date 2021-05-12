@@ -43,44 +43,6 @@ public class DataController {
     @Autowired
     RepeaterService repeaterService;
 
-    @Value("${unauthorizedConfigs}")
-    private List<String> unauthorizedConfigs;
-
-    // Енум с режимом выборки (плоская или иерархичная)
-    enum Modes {
-        flat, hierarchical;
-    }
-
-    @PostConstruct
-    void init(){
-        log.info("unauthorizedConfigs => {}", unauthorizedConfigs.toString());
-    }
-
-    @DebugLog
-    @PostMapping("/{mode}/unauthorized/{configName}")
-    public ResponseEntity<List<ObjectNode>> getFlatNoAuthConfigsData(
-            @PathVariable Modes mode,
-            @PathVariable String configName,
-            @RequestBody JsonNode filter, Pageable pageable){
-
-        if(!unauthorizedConfigs.contains(configName))
-            throw new ForbiddenException("Конфигурация недоступна");
-
-        List<ObjectNode> result = null;
-        if(mode.equals(Modes.flat)) {
-            result = dataService.getFlatData(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), filter, pageable);
-        } else if(mode.equals(Modes.hierarchical)) {
-            result = dataService.getHierarchicalData(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), filter, pageable);
-        }
-
-        if(result == null)
-            return ResponseEntity.badRequest().build();
-        else {
-            log.info("Mode: [{}] Config: [{}] Result.size: [{} rows]", mode.toString(), configName, result.size());
-            return ResponseEntity.ok(result);
-        }
-    }
-
     @DebugLog
     @PostMapping("/flat/{configName}")
     public ResponseEntity<List<ObjectNode>> getFlatData(
