@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
 import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
-import com.irontechspace.dynamicdq.model.ConfigTable;
-import com.irontechspace.dynamicdq.service.ConfigService;
+import com.irontechspace.dynamicdq.model.Query.QueryConfig;
+import com.irontechspace.dynamicdq.service.QueryConfigService;
 import com.irontechspace.dynamicdq.service.DataService;
-import com.irontechspace.dynamicdq.utils.Auth;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Log4j2
@@ -27,7 +25,7 @@ import java.util.UUID;
 public class UnauthorizedController {
 
     @Autowired
-    ConfigService configService;
+    QueryConfigService queryConfigService;
 
     @Autowired
     DataService dataService;
@@ -45,13 +43,13 @@ public class UnauthorizedController {
 
     @DebugLog
     @PostMapping("/configuration/{configName}")
-    public ResponseEntity<ConfigTable> getConfig(
+    public ResponseEntity<QueryConfig> getConfig(
             @PathVariable String configName) {
 
         if(!unauthorizedConfigs.contains(configName))
             throw new ForbiddenException("Конфигурация недоступна");
 
-        ConfigTable table = configService.getConfigByConfigName(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"));
+        QueryConfig table = queryConfigService.getByName(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"));
 
         if(table == null)
             return ResponseEntity.badRequest().build();
