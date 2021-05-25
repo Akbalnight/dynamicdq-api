@@ -1,7 +1,6 @@
 package com.mobinspect.dynamicdq.controller;
 
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
-import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
 import com.irontechspace.dynamicdq.utils.Auth;
 import com.irontechspace.dynamicdq.service.DataService;
 import com.irontechspace.dynamicdq.service.SaveDataService;
@@ -12,14 +11,12 @@ import com.mobinspect.dynamicdq.service.RepeaterService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -43,7 +40,24 @@ public class DataController {
     @Autowired
     RepeaterService repeaterService;
 
-    @DebugLog
+    @DebugLog(param = "configName")
+    @ApiOperation(value = "Получить SQL запрос")
+    @PostMapping("/sql/{configName}")
+    public ResponseEntity<ObjectNode> getSql(
+            @RequestHeader Map<String, String> headers,
+            @PathVariable String configName,
+            @RequestBody JsonNode filter, Pageable pageable){
+
+        ObjectNode result = dataService.getSql(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers), filter, pageable);
+
+        if(result == null)
+            return ResponseEntity.badRequest().build();
+        else {
+            return ResponseEntity.ok(result);
+        }
+    }
+
+    @DebugLog(param = "configName")
     @PostMapping("/flat/{configName}")
     public ResponseEntity<List<ObjectNode>> getFlatData(
             @RequestHeader Map<String, String> headers,
@@ -55,12 +69,12 @@ public class DataController {
         if(result == null)
             return ResponseEntity.badRequest().build();
         else {
-            log.info("Result.size : [{} rows]", result.size());
+            log.info("[{}] Flat result size : [{} rows]", configName, result.size());
             return ResponseEntity.ok(result);
         }
     }
 
-    @DebugLog
+    @DebugLog(param = "configName")
     @PostMapping("/flat/count/{configName}")
     @ApiOperation(value = "Получить кол-во записей в плоской таблице")
     public ResponseEntity<Long> getFlatDataCount(
@@ -71,12 +85,12 @@ public class DataController {
         if(result == null)
             return ResponseEntity.badRequest().build();
         else {
-            log.info("getFlatDataCount => Result count : [{} rows]", result);
+            log.info("[{}] Count result size : [{} rows]", configName, result);
             return ResponseEntity.ok(result);
         }
     }
 
-    @DebugLog
+    @DebugLog(param = "configName")
     @PostMapping("/hierarchical/{configName}")
     public ResponseEntity<List<ObjectNode>> getHierarchicalData(
             @RequestHeader Map<String, String> headers,
@@ -88,12 +102,12 @@ public class DataController {
         if(result == null)
             return ResponseEntity.badRequest().build();
         else {
-            log.info("Result.size : [{} rows]", result.size());
+            log.info("[{}] Hierarchical result size : [{} rows]", configName, result.size());
             return ResponseEntity.ok(result);
         }
     }
 
-    @DebugLog
+    @DebugLog(param = "configName")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/save/{configName}")
     public ResponseEntity<Object> saveData(
             @RequestHeader Map<String, String> headers,
@@ -108,8 +122,9 @@ public class DataController {
             return ResponseEntity.ok(result);
     }
 
-    @PostMapping(value = "/save/file/{configName}", consumes = {"multipart/form-data"})
     @ApiOperation("Загрузить новый файл")
+    @DebugLog(param = "configName")
+    @PostMapping(value = "/save/file/{configName}", consumes = {"multipart/form-data"})
     public ResponseEntity<Object> uploadFile(
             @RequestHeader Map<String, String> headers,
             @PathVariable String configName,
@@ -118,16 +133,18 @@ public class DataController {
         return saveFileService.saveFile(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers), file, dataObject);
     }
 
-    @GetMapping("/file/{configName}/{id}")
     @ApiOperation("Получить файл")
+    @DebugLog(param = "configName")
+    @GetMapping("/file/{configName}/{id}")
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String configName,
             @PathVariable String id) {
         return saveFileService.getFileById(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), id);
     }
 
-    @PostMapping("/file/zip/{configName}")
     @ApiOperation("Получить файл")
+    @DebugLog(param = "configName")
+    @PostMapping("/file/zip/{configName}")
     public ResponseEntity<byte[]> downloadZip(
             @PathVariable String configName,
             @RequestBody String[] ids) throws IOException {

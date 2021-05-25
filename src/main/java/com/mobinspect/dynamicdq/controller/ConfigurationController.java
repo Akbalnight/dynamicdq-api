@@ -1,5 +1,6 @@
 package com.mobinspect.dynamicdq.controller;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
 import com.irontechspace.dynamicdq.model.Query.QueryConfig;
 import com.irontechspace.dynamicdq.model.Save.SaveConfig;
@@ -28,16 +29,16 @@ public class ConfigurationController {
 
     @DebugLog
     @GetMapping
-    public List<QueryConfig> getConfigs(@RequestHeader Map<String, String> headers){
+    public List<QueryConfig> getConfigs(@RequestHeader Map<String, String> headers) {
         return queryConfigService.getAll(Auth.getUserId(headers), Auth.getListUserRoles(headers));
     }
 
-    @DebugLog
+    @DebugLog(param = "configName")
     @GetMapping("/{configName}")
     public ResponseEntity getConfig(
             @PathVariable String configName,
             @RequestHeader Map<String, String> headers) {
-        QueryConfig table = queryConfigService.getByName(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers));
+        ObjectNode table = queryConfigService.getShortByName(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers));
         if(table == null) return ResponseEntity.badRequest().build();
         else return ResponseEntity.ok().body(table);
     }
