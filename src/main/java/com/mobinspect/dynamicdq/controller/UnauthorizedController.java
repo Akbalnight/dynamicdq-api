@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
 import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
-import com.irontechspace.dynamicdq.model.Query.QueryConfig;
 import com.irontechspace.dynamicdq.service.QueryConfigService;
 import com.irontechspace.dynamicdq.service.DataService;
+import com.mobinspect.dynamicdq.model.QueryMode;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,9 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+
+import static com.mobinspect.dynamicdq.configs.DefaultParams.*;
 
 @Log4j2
 @RestController
@@ -33,9 +33,6 @@ public class UnauthorizedController {
     @Value("${unauthorizedConfigs}")
     private List<String> unauthorizedConfigs;
 
-    // Енум с режимом выборки (плоская или иерархичная)
-    enum Modes { flat, hierarchical }
-
     @PostConstruct
     void init(){
         log.info("unauthorizedConfigs => {}", unauthorizedConfigs.toString());
@@ -43,24 +40,21 @@ public class UnauthorizedController {
 
     @DebugLog
     @PostMapping("/configuration/{configName}")
-    public ResponseEntity<QueryConfig> getConfig(
+    public ResponseEntity<ObjectNode> getConfig(
             @PathVariable String configName) {
 
         if(!unauthorizedConfigs.contains(configName))
             throw new ForbiddenException("Конфигурация недоступна");
 
-        QueryConfig table = queryConfigService.getByName(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"));
-
-        if(table == null)
-            return ResponseEntity.badRequest().build();
-        else
-            return ResponseEntity.ok().body(table);
+        ObjectNode table = queryConfigService.getShortByName(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE);
+        if(table == null) return ResponseEntity.badRequest().build();
+        else return ResponseEntity.ok().body(table);
     }
 
     @DebugLog
     @PostMapping("/data/{mode}/{configName}")
     public ResponseEntity<List<ObjectNode>> getFlatData(
-            @PathVariable Modes mode,
+            @PathVariable QueryMode mode,
             @PathVariable String configName,
             @RequestBody JsonNode filter, Pageable pageable){
 
@@ -68,10 +62,10 @@ public class UnauthorizedController {
             throw new ForbiddenException("Конфигурация недоступна");
 
         List<ObjectNode> result = null;
-        if(mode.equals(Modes.flat)) {
-            result = dataService.getFlatData(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), filter, pageable);
-        } else if(mode.equals(Modes.hierarchical)) {
-            result = dataService.getHierarchicalData(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), filter, pageable);
+        if(mode.equals(QueryMode.flat)) {
+            result = dataService.getFlatData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+        } else if(mode.equals(QueryMode.hierarchical)) {
+            result = dataService.getHierarchicalData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
         }
 
         if(result == null)

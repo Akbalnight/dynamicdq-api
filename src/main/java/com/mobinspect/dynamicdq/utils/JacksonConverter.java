@@ -7,17 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.boot.web.servlet.MultipartConfigFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-import org.springframework.util.unit.DataSize;
 
-import javax.servlet.MultipartConfigElement;
-
-
-@Getter @Setter
-@NoArgsConstructor
+@Getter
+@Setter
 @Component
+@NoArgsConstructor
 public class JacksonConverter {
 
    private static ObjectMapper mapper = new ObjectMapper();
@@ -29,12 +24,4 @@ public class JacksonConverter {
     public static Object jsonToObject(TreeNode node, Class<Object> c) throws JsonProcessingException {
         return mapper.treeToValue(node, c);
     }
-
-//    @Bean
-//    public MultipartConfigElement multipartConfigElement() {
-//        MultipartConfigFactory factory = new MultipartConfigFactory();
-//        factory.setMaxFileSize(DataSize.ofMegabytes(100));
-//        factory.setMaxRequestSize(DataSize.ofMegabytes(100));
-//        return factory.createMultipartConfig();
-//    }
 }
