@@ -8,23 +8,25 @@ import com.irontechspace.dynamicdq.service.SaveDataService;
 import com.irontechspace.dynamicdq.service.SaveFileService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mobinspect.dynamicdq.model.QueryMode;
 import com.mobinspect.dynamicdq.service.RepeaterService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.mobinspect.dynamicdq.configs.DefaultParams.DEFAULT_USER_ID;
+import static com.mobinspect.dynamicdq.configs.DefaultParams.DEFAULT_USER_ROLE;
 
 @Log4j2
 @RestController
@@ -43,24 +45,34 @@ public class DataController {
     @Autowired
     RepeaterService repeaterService;
 
-    @DebugLog
-    @PostMapping("/flat/{configName}")
+    @DebugLog(param = "configName")
+    @PostMapping("/{mode}/{configName}")
+    @ApiOperation(value = "Получить данные плоские или иерархичные")
     public ResponseEntity<List<ObjectNode>> getFlatData(
             @RequestHeader Map<String, String> headers,
+            @PathVariable QueryMode mode,
             @PathVariable String configName,
             @RequestBody JsonNode filter, Pageable pageable){
 
-        List<ObjectNode> result = dataService.getFlatData(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers), filter, pageable);
+        UUID userId = Auth.getUserId(headers);
+        List<String> userRoles = Auth.getListUserRoles(headers);
+
+        List<ObjectNode> result = null;
+        if(mode.equals(QueryMode.flat)) {
+            result = dataService.getFlatData(configName, userId, userRoles, filter, pageable);
+        } else if(mode.equals(QueryMode.hierarchical)) {
+            result = dataService.getHierarchicalData(configName, userId, userRoles, filter, pageable);
+        }
 
         if(result == null)
             return ResponseEntity.badRequest().build();
         else {
-            log.info("Result.size : [{} rows]", result.size());
+            log.info("Mode: [{}] Config: [{}] Result.size: [{} rows]", mode.toString(), configName, result.size());
             return ResponseEntity.ok(result);
         }
     }
 
-    @DebugLog
+    @DebugLog(param = "configName")
     @PostMapping("/flat/count/{configName}")
     @ApiOperation(value = "Получить кол-во записей в плоской таблице")
     public ResponseEntity<Long> getFlatDataCount(
@@ -71,29 +83,12 @@ public class DataController {
         if(result == null)
             return ResponseEntity.badRequest().build();
         else {
-            log.info("getFlatDataCount => Result count : [{} rows]", result);
+            log.info("[{}] Count result size : [{} rows]", configName, result);
             return ResponseEntity.ok(result);
         }
     }
 
-    @DebugLog
-    @PostMapping("/hierarchical/{configName}")
-    public ResponseEntity<List<ObjectNode>> getHierarchicalData(
-            @RequestHeader Map<String, String> headers,
-            @PathVariable String configName,
-            @RequestBody JsonNode filter, Pageable pageable){
-
-        List<ObjectNode> result = dataService.getHierarchicalData(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers), filter, pageable);
-
-        if(result == null)
-            return ResponseEntity.badRequest().build();
-        else {
-            log.info("Result.size : [{} rows]", result.size());
-            return ResponseEntity.ok(result);
-        }
-    }
-
-    @DebugLog
+    @DebugLog(param = "configName")
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/save/{configName}")
     public ResponseEntity<Object> saveData(
             @RequestHeader Map<String, String> headers,
@@ -108,8 +103,9 @@ public class DataController {
             return ResponseEntity.ok(result);
     }
 
-    @PostMapping(value = "/save/file/{configName}", consumes = {"multipart/form-data"})
     @ApiOperation("Загрузить новый файл")
+    @DebugLog(param = "configName")
+    @PostMapping(value = "/save/file/{configName}", consumes = {"multipart/form-data"})
     public ResponseEntity<Object> uploadFile(
             @RequestHeader Map<String, String> headers,
             @PathVariable String configName,
@@ -118,21 +114,21 @@ public class DataController {
         return saveFileService.saveFile(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers), file, dataObject);
     }
 
+    @ApiOperation("Получить файл по ИД")
+    @DebugLog(param = "configName")
     @GetMapping("/file/{configName}/{id}")
-    @ApiOperation("Получить файл")
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String configName,
             @PathVariable String id) {
-        return saveFileService.getFileById(configName, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), Collections.singletonList("ROLE_ADMIN"), id);
+        return saveFileService.getFileById(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, id);
     }
 
+    @ApiOperation("Получить архив файлов по массиву ИД")
+    @DebugLog(param = "configName")
     @PostMapping("/file/zip/{configName}")
-    @ApiOperation("Получить файл")
     public ResponseEntity<byte[]> downloadZip(
             @PathVariable String configName,
             @RequestBody String[] ids) throws IOException {
-        return repeaterService.getFileByIds(configName,
-                UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"),
-                Collections.singletonList("ROLE_ADMIN"), ids);
+        return repeaterService.getFileByIds(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, ids);
     }
 }

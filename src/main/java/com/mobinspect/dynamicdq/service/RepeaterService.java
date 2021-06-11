@@ -35,6 +35,8 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.mobinspect.dynamicdq.configs.DefaultParams.DEFAULT_USER_ID;
+import static com.mobinspect.dynamicdq.configs.DefaultParams.DEFAULT_USER_ROLE;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 
 @Log4j2
@@ -158,8 +160,7 @@ public class RepeaterService {
         log.info("Starting at " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // Получение всех repeaters
-        List<ObjectNode> results = dataService.getFlatData(GET_REPEATER, UUID.fromString("0be7f31d-3320-43db-91a5-3c44c99329ab"), new ArrayList<String>(
-                Collections.singletonList("ROLE_ADMIN")), null, PageRequest.of(0, 10));
+        List<ObjectNode> results = dataService.getFlatData(GET_REPEATER, DEFAULT_USER_ID, DEFAULT_USER_ROLE, null, PageRequest.of(0, 10));
 
         for (ObjectNode result : results) {
             Repeater e = objectMapper.treeToValue(result, Repeater.class);
