@@ -1,5 +1,6 @@
 package com.mobinspect.dynamicdq.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irontechspace.dynamicdq.DebugLog.DebugLog;
 import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
 import com.irontechspace.dynamicdq.utils.Auth;
@@ -120,7 +121,9 @@ public class DataController {
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String configName,
             @PathVariable String id) {
-        return saveFileService.getFileById(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, id);
+        ObjectNode filter = new ObjectMapper().createObjectNode();
+        filter.put("id", id);
+        return saveFileService.getFileResponse(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter);
     }
 
     @ApiOperation("Получить архив файлов по массиву ИД")
