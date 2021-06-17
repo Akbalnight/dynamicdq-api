@@ -157,10 +157,10 @@ public class RepeaterService {
                 .registerModule(new JavaTimeModule())
                 .configure(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE, false);
 
-        log.info("Starting at " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        log.info("Repeater starting at " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // Получение всех repeaters
-        List<ObjectNode> results = dataService.getFlatData(GET_REPEATER, DEFAULT_USER_ID, DEFAULT_USER_ROLE, null, PageRequest.of(0, 10));
+        List<ObjectNode> results = dataService.getFlatData(GET_REPEATER, DEFAULT_USER_ID, DEFAULT_USER_ROLE, objectMapper.createObjectNode(), PageRequest.of(0, 10));
 
         for (ObjectNode result : results) {
             Repeater e = objectMapper.treeToValue(result, Repeater.class);
