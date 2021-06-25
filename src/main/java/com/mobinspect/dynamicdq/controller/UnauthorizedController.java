@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.UUID;
 
 import static com.mobinspect.dynamicdq.configs.DefaultParams.*;
 
