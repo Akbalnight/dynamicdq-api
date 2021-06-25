@@ -6,11 +6,13 @@ import com.irontechspace.dynamicdq.DebugLog.DebugLog;
 import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
 import com.irontechspace.dynamicdq.service.QueryConfigService;
 import com.irontechspace.dynamicdq.service.DataService;
+import com.irontechspace.dynamicdq.service.SaveDataService;
 import com.mobinspect.dynamicdq.model.QueryMode;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +31,8 @@ public class UnauthorizedController {
 
     @Autowired
     DataService dataService;
+    @Autowired
+    SaveDataService saveDataService;
 
     @Value("${unauthorizedConfigs}")
     private List<String> unauthorizedConfigs;
