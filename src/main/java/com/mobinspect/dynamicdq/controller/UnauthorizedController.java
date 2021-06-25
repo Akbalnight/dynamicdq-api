@@ -53,26 +53,33 @@ public class UnauthorizedController {
 
     @DebugLog
     @PostMapping("/data/{mode}/{configName}")
-    public ResponseEntity<List<ObjectNode>> getFlatData(
+    public <T> T getFlatData(
             @PathVariable QueryMode mode,
             @PathVariable String configName,
             @RequestBody JsonNode filter, Pageable pageable){
 
         if(!unauthorizedConfigs.contains(configName))
             throw new ForbiddenException("Конфигурация недоступна");
-
-        List<ObjectNode> result = null;
-        if(mode.equals(QueryMode.flat)) {
-            result = dataService.getFlatData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-        } else if(mode.equals(QueryMode.hierarchical)) {
-            result = dataService.getHierarchicalData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-        }
-
-        if(result == null)
-            return ResponseEntity.badRequest().build();
-        else {
-            log.info("Mode: [{}] Config: [{}] Result.size: [{} rows]", mode.toString(), configName, result.size());
-            return ResponseEntity.ok(result);
-        }
+      
+        UUID userId = DEFAULT_USER_ID;
+        List<String> userRoles = DEFAULT_USER_ROLE;
+        switch (mode){
+              case flat:
+                  return (T) dataService.getFlatData(configName, userId, userRoles, filter, pageable);
+              case hierarchical:
+                  return (T) dataService.getHierarchicalData(configName, userId, userRoles, filter, pageable);
+              case count:
+                  return (T) dataService.getFlatDataCount(configName, userId, userRoles, filter, pageable);
+              case object:
+                  return (T) dataService.getObject(configName, userId, userRoles, filter, pageable);
+              case sql:
+                  return (T) dataService.getSql(configName, userId, userRoles, filter, pageable);
+              case sqlCount:
+                  return (T) dataService.getSqlCount(configName, userId, userRoles, filter, pageable);
+              case save:
+                  return (T) saveDataService.saveData(configName, userId, userRoles, filter);
+              default:
+                  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ошибка запроса. Указан не существующий mode");
+          }
     }
 }
