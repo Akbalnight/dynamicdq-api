@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.irontechspace.dynamicdq.DebugLog.DebugLog;
-import com.irontechspace.dynamicdq.service.DataService;
-import com.irontechspace.dynamicdq.service.SaveDataService;
-import com.irontechspace.dynamicdq.service.SaveFileService;
+import com.irontechspace.dynamicdq.annotations.ExecDuration;
+import com.irontechspace.dynamicdq.executor.file.FileService;
+import com.irontechspace.dynamicdq.executor.query.QueryService;
+import com.irontechspace.dynamicdq.executor.save.SaveService;
 import com.irontechspace.dynamicdq.utils.Auth;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,17 +27,17 @@ import java.util.*;
 @RequestMapping("/mobile")
 public class MobileController {
     @Autowired
-    DataService dataService;
+    QueryService queryService;
 
     @Autowired
-    SaveDataService saveDataService;
+    SaveService saveService;
 
     @Autowired
-    SaveFileService saveFileService;
+    FileService fileService;
 
     final ObjectMapper mapper = new ObjectMapper();
 
-    @DebugLog
+    @ExecDuration
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/detours")
     public ResponseEntity<Object> saveDetours(
             @RequestHeader Map<String, String> headers,
@@ -45,7 +45,7 @@ public class MobileController {
         if (dataObject.get("id") != null && dataObject.get("id").asText() != null && !dataObject.get("id").asText().isEmpty()) {
             ObjectNode detour = getObjectById("mobileDetours", Auth.getUserId(headers), Auth.getListUserRoles(headers), dataObject.get("id").asText());
             if (detour.get("frozen") != null && detour.get("frozen").asBoolean()) {
-                Object result = saveDataService.saveData("mobileDetoursSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), dataObject);
+                Object result = saveService.saveData("mobileDetoursSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), dataObject);
                 if (result == null)
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Ошибка сохранения обхода");
                 else
@@ -56,7 +56,7 @@ public class MobileController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать обходы");
     }
 
-    @DebugLog
+    @ExecDuration
     @Transactional
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/saveDefects")
     public ResponseEntity<Object> saveDefects(
@@ -67,20 +67,20 @@ public class MobileController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет обновлять дефекты");
         }
 
-        Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject);
+        Object result = saveService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject);
 
         ObjectNode fileData = mapper.createObjectNode();
         fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
         if (files != null) {
             for (MultipartFile file : files) {
-                saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
+                fileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
             }
         }
 
         return ResponseEntity.ok(result);
     }
 
-    @DebugLog
+    @ExecDuration
     @Transactional
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/updateDefects")
     public ResponseEntity<Object> updateDefects(
@@ -115,14 +115,14 @@ public class MobileController {
         defect.set("statusProcessId", defectObject.get("statusProcessId"));
         defect.set("extraData", extraData);
 
-        Object result = saveDataService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
+        Object result = saveService.saveData("mobileDefectSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), defect);
 
         ObjectNode fileData = mapper.createObjectNode();
         fileData.set("defects", mapper.createObjectNode().put("defectId", result.toString()));
 
         if (files != null) {
             for (MultipartFile file : files) {
-                saveFileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
+                fileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
             }
         }
         return ResponseEntity.ok(result);
@@ -141,7 +141,7 @@ public class MobileController {
 
     public ObjectNode getObjectByFilter(String configName, UUID userId, List<String> userRoles, JsonNode filter) {
 
-        List<ObjectNode> result = dataService.getFlatData(configName, userId, userRoles, filter, PageRequest.of(0, 1));
+        List<ObjectNode> result = queryService.getFlatData(configName, userId, userRoles, filter, PageRequest.of(0, 1));
 
         if (result.size() == 0) {
             String msg = String.format("Объект не найден. Сonfig Name: [%s]. Filter: [%s]", configName, filter.toString());

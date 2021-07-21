@@ -2,17 +2,20 @@ package com.mobinspect.dynamicdq.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.irontechspace.dynamicdq.DebugLog.DebugLog;
+import com.irontechspace.dynamicdq.annotations.ExecDuration;
+import com.irontechspace.dynamicdq.configurator.query.QueryConfigService;
 import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
-import com.irontechspace.dynamicdq.service.QueryConfigService;
-import com.irontechspace.dynamicdq.service.DataService;
+import com.irontechspace.dynamicdq.executor.query.QueryService;
+import com.irontechspace.dynamicdq.executor.save.SaveService;
 import com.mobinspect.dynamicdq.model.QueryMode;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -28,7 +31,10 @@ public class UnauthorizedController {
     QueryConfigService queryConfigService;
 
     @Autowired
-    DataService dataService;
+    QueryService queryService;
+
+    @Autowired
+    SaveService saveService;
 
     @Value("${unauthorizedConfigs}")
     private List<String> unauthorizedConfigs;
@@ -38,7 +44,7 @@ public class UnauthorizedController {
         log.info("unauthorizedConfigs => {}", unauthorizedConfigs.toString());
     }
 
-    @DebugLog
+    @ExecDuration
     @PostMapping("/configuration/{configName}")
     public ResponseEntity<ObjectNode> getConfig(
             @PathVariable String configName) {
@@ -51,9 +57,9 @@ public class UnauthorizedController {
         else return ResponseEntity.ok().body(table);
     }
 
-    @DebugLog
+    @ExecDuration
     @PostMapping("/data/{mode}/{configName}")
-    public ResponseEntity<List<ObjectNode>> getFlatData(
+    public <T> T getFlatData(
             @PathVariable QueryMode mode,
             @PathVariable String configName,
             @RequestBody JsonNode filter, Pageable pageable){
@@ -61,18 +67,23 @@ public class UnauthorizedController {
         if(!unauthorizedConfigs.contains(configName))
             throw new ForbiddenException("Конфигурация недоступна");
 
-        List<ObjectNode> result = null;
-        if(mode.equals(QueryMode.flat)) {
-            result = dataService.getFlatData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-        } else if(mode.equals(QueryMode.hierarchical)) {
-            result = dataService.getHierarchicalData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-        }
-
-        if(result == null)
-            return ResponseEntity.badRequest().build();
-        else {
-            log.info("Mode: [{}] Config: [{}] Result.size: [{} rows]", mode.toString(), configName, result.size());
-            return ResponseEntity.ok(result);
+        switch (mode){
+            case flat:
+                return (T) queryService.getFlatData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+            case hierarchical:
+                return (T) queryService.getHierarchicalData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+            case count:
+                return (T) queryService.getFlatDataCount(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+            case object:
+                return (T) queryService.getObject(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+            case sql:
+                return (T) queryService.getSql(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+            case sqlCount:
+                return (T) queryService.getSqlCount(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+            case save:
+                return (T) saveService.saveData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter);
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ошибка запроса. Указан не существующий mode");
         }
     }
 }

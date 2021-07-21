@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.irontechspace.dynamicdq.service.DataService;
-import com.irontechspace.dynamicdq.service.SaveDataService;
+import com.irontechspace.dynamicdq.executor.query.QueryService;
+import com.irontechspace.dynamicdq.executor.save.SaveService;
 import com.mobinspect.dynamicdq.model.detour.DetourNodeDto;
 import com.mobinspect.dynamicdq.model.repeater.Repeater;
 import lombok.extern.log4j.Log4j2;
@@ -43,8 +43,8 @@ import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 @Service
 public class RepeaterService {
 
-    private final DataService dataService;
-    private final SaveDataService saveDataService;
+    private final QueryService queryService;
+    private final SaveService saveService;
     private final static String GET_REPEATER = "repeaters";
     private final static String SAVE_REPEATER = "repeaterDataSave";
     private final static String SAVE_DETOURS = "saveDetourForm";
@@ -52,9 +52,9 @@ public class RepeaterService {
     @Value("${dynamicdq.files.dir}")
     private String rootDir;
 
-    public RepeaterService(DataService dataService, SaveDataService saveDataService) {
-        this.dataService = dataService;
-        this.saveDataService = saveDataService;
+    public RepeaterService(QueryService queryService, SaveService saveService) {
+        this.queryService = queryService;
+        this.saveService = saveService;
     }
 
     public ResponseEntity<byte[]> getFileByIds(String configName, UUID userId, List<String> userRoles, String[] ids) throws IOException {
@@ -69,7 +69,7 @@ public class RepeaterService {
 
         for (String id : ids) {
             filter.put("id", id);
-            List<ObjectNode> files = this.dataService.getFlatData(configName, userId, userRoles, filter, PageRequest.of(0, 1));
+            List<ObjectNode> files = this.queryService.getFlatData(configName, userId, userRoles, filter, PageRequest.of(0, 1));
             if (files.size() == 0) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
             } else if (files.size() > 1) {
@@ -160,7 +160,7 @@ public class RepeaterService {
         log.info("Repeater starting at " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // Получение всех repeaters
-        List<ObjectNode> results = dataService.getFlatData(GET_REPEATER, DEFAULT_USER_ID, DEFAULT_USER_ROLE, objectMapper.createObjectNode(), PageRequest.of(0, 10));
+        List<ObjectNode> results = queryService.getFlatData(GET_REPEATER, DEFAULT_USER_ID, DEFAULT_USER_ROLE, objectMapper.createObjectNode(), PageRequest.of(0, 10));
 
         for (ObjectNode result : results) {
             Repeater e = objectMapper.treeToValue(result, Repeater.class);
@@ -193,7 +193,7 @@ public class RepeaterService {
 
         JsonNode repeaterNode = objectMapper.valueToTree(e);
 
-        saveDataService.saveData(SAVE_REPEATER, e.getUserId(), new ArrayList<String>(
+        saveService.saveData(SAVE_REPEATER, e.getUserId(), new ArrayList<String>(
                 Collections.singletonList(e.getRole())), repeaterNode);
 
     }
@@ -344,6 +344,6 @@ public class RepeaterService {
 
         JsonNode detourNode = mapper.valueToTree(dto);
         log.info("Create Detours by repeater config: [{}] User: [{}] Roles: [{}]\nDATA: [{}]", SAVE_DETOURS, e.getUserId(), Collections.singletonList(e.getRole()), detourNode.toString());
-        saveDataService.saveData(SAVE_DETOURS, e.getUserId(), Collections.singletonList(e.getRole()), detourNode);
+        saveService.saveData(SAVE_DETOURS, e.getUserId(), Collections.singletonList(e.getRole()), detourNode);
     }
 }
