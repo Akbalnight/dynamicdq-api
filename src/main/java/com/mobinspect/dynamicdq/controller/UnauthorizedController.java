@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.annotations.ExecDuration;
 import com.irontechspace.dynamicdq.configurator.query.QueryConfigService;
 import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
+import com.irontechspace.dynamicdq.executor.ExecutorService;
+import com.irontechspace.dynamicdq.executor.ExecutorType;
 import com.irontechspace.dynamicdq.executor.query.QueryService;
 import com.irontechspace.dynamicdq.executor.save.SaveService;
 import com.mobinspect.dynamicdq.model.QueryMode;
@@ -19,9 +21,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
-import java.util.UUID;
 
-import static com.mobinspect.dynamicdq.configs.DefaultParams.*;
+import static com.irontechspace.dynamicdq.utils.Auth.*;
 
 @Log4j2
 @RestController
@@ -36,6 +37,9 @@ public class UnauthorizedController {
 
     @Autowired
     SaveService saveService;
+
+    @Autowired
+    ExecutorService executorService;
 
     @Value("${unauthorizedConfigs}")
     private List<String> unauthorizedConfigs;
@@ -61,30 +65,13 @@ public class UnauthorizedController {
     @ExecDuration
     @PostMapping("/data/{mode}/{configName}")
     public <T> T getFlatData(
-            @PathVariable QueryMode mode,
+            @PathVariable ExecutorType mode,
             @PathVariable String configName,
             @RequestBody JsonNode filter, Pageable pageable){
 
         if(!unauthorizedConfigs.contains(configName))
             throw new ForbiddenException("Конфигурация недоступна");
 
-        switch (mode){
-            case flat:
-                return (T) queryService.getFlatData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-            case hierarchical:
-                return (T) queryService.getHierarchicalData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-            case count:
-                return (T) queryService.getFlatDataCount(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-            case object:
-                return (T) queryService.getObject(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-            case sql:
-                return (T) queryService.getSql(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-            case sqlCount:
-                return (T) queryService.getSqlCount(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
-            case save:
-                return (T) saveService.saveData(configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter);
-            default:
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ошибка запроса. Указан не существующий mode");
-        }
+        return executorService.executeConfig(mode, configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
     }
 }

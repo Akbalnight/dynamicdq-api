@@ -35,9 +35,8 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static com.mobinspect.dynamicdq.configs.DefaultParams.DEFAULT_USER_ID;
-import static com.mobinspect.dynamicdq.configs.DefaultParams.DEFAULT_USER_ROLE;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
+import static com.irontechspace.dynamicdq.utils.Auth.*;
 
 @Log4j2
 @Service
