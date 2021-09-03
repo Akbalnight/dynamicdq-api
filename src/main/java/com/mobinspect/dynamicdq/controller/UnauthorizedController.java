@@ -5,19 +5,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.irontechspace.dynamicdq.annotations.ExecDuration;
 import com.irontechspace.dynamicdq.configurator.query.QueryConfigService;
 import com.irontechspace.dynamicdq.exceptions.ForbiddenException;
-import com.irontechspace.dynamicdq.executor.ExecutorService;
-import com.irontechspace.dynamicdq.executor.ExecutorType;
-import com.irontechspace.dynamicdq.executor.query.QueryService;
-import com.irontechspace.dynamicdq.executor.save.SaveService;
-import com.mobinspect.dynamicdq.model.QueryMode;
+import com.irontechspace.dynamicdq.executor.task.model.TaskType;
+import com.irontechspace.dynamicdq.executor.task.TaskService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -33,13 +28,7 @@ public class UnauthorizedController {
     QueryConfigService queryConfigService;
 
     @Autowired
-    QueryService queryService;
-
-    @Autowired
-    SaveService saveService;
-
-    @Autowired
-    ExecutorService executorService;
+    TaskService taskService;
 
     @Value("${unauthorizedConfigs}")
     private List<String> unauthorizedConfigs;
@@ -64,14 +53,14 @@ public class UnauthorizedController {
 
     @ExecDuration
     @PostMapping("/data/{mode}/{configName}")
-    public <T> T getFlatData(
-            @PathVariable ExecutorType mode,
+    public Object getFlatData(
+            @PathVariable TaskType mode,
             @PathVariable String configName,
             @RequestBody JsonNode filter, Pageable pageable){
 
         if(!unauthorizedConfigs.contains(configName))
             throw new ForbiddenException("Конфигурация недоступна");
 
-        return executorService.executeConfig(mode, configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
+        return taskService.executeConfig(mode, configName, DEFAULT_USER_ID, DEFAULT_USER_ROLE, filter, pageable);
     }
 }
