@@ -1,7 +1,7 @@
 package com.mobinspect.dynamicdq.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.irontechspace.dynamicdq.DebugLog.DebugLog;
+import com.irontechspace.dynamicdq.annotations.ExecDuration;
 import com.mobinspect.dynamicdq.service.RepeaterService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
@@ -20,7 +20,7 @@ public class RepeaterController {
         this.repeaterService = repeaterService;
     }
 
-    @DebugLog
+    @ExecDuration
     @PostMapping
     @ApiOperation(value = "createRepeatableRows")
     public void createRepeatableRows() throws JsonProcessingException {

@@ -1,9 +1,9 @@
 package com.mobinspect.dynamicdq.controller;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.irontechspace.dynamicdq.DebugLog.DebugLog;
+import com.irontechspace.dynamicdq.annotations.ExecDuration;
+import com.irontechspace.dynamicdq.configurator.query.QueryConfigService;
 import com.irontechspace.dynamicdq.utils.Auth;
-import com.irontechspace.dynamicdq.service.QueryConfigService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class ConfigurationController {
     }
 
     @ApiOperation(value = "Получить конфигурацию по имени")
-    @DebugLog(param = "configName")
+    @ExecDuration(param = "configName")
     @GetMapping("/{configName}")
     public ResponseEntity<ObjectNode> getConfig(
             @PathVariable String configName,
