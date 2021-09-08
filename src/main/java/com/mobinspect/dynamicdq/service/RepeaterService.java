@@ -149,8 +149,8 @@ public class RepeaterService {
     }
 
 
-    @Scheduled(cron = "${job.cron.rate}")
-    @Transactional
+    //    @Scheduled(cron = "${job.cron.rate}")
+//    @Transactional
     public void createRepeatableRows() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())

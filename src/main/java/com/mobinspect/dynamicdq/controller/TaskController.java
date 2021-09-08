@@ -1,6 +1,7 @@
 package com.mobinspect.dynamicdq.controller;
 
 import com.irontechspace.dynamicdq.annotations.ExecDuration;
+import com.irontechspace.dynamicdq.executor.task.TaskService;
 import com.irontechspace.dynamicdq.rabbit.RabbitSender;
 import com.irontechspace.dynamicdq.executor.task.model.Task;
 import com.irontechspace.dynamicdq.executor.task.model.TaskConfig;
@@ -15,15 +16,29 @@ import java.util.UUID;
 
 @Log4j2
 @RestController
-@RequestMapping("/rabbit")
-public class RabbitController {
+@RequestMapping("/task")
+public class TaskController {
+
+    @Autowired
+    TaskService taskService;
 
     @Autowired
     RabbitSender rabbitSender;
 
     @ExecDuration()
-    @PostMapping("/task")
-    public UUID setTask( @RequestHeader Map<String, String> headers, @RequestBody List<TaskConfig> configs){
+    @PostMapping("/sync")
+    public Object executeSyncTask( @RequestHeader Map<String, String> headers, @RequestBody List<TaskConfig> configs){
+        Task task = Task.builder()
+                .id(UUID.randomUUID())
+                .userId(Auth.getUserId(headers))
+                .userRoles(Auth.getListUserRoles(headers))
+                .configs(configs).build();
+        return taskService.executeTask(task);
+    }
+
+    @ExecDuration()
+    @PostMapping("/async")
+    public UUID executeAsyncTask( @RequestHeader Map<String, String> headers, @RequestBody List<TaskConfig> configs){
         Task task = Task.builder()
                 .id(UUID.randomUUID())
                 .userId(Auth.getUserId(headers))
