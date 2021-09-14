@@ -37,7 +37,7 @@ public class MobileController {
 
     final ObjectMapper mapper = new ObjectMapper();
 
-    @ExecDuration
+    @ExecDuration(params = {"dataObject"})
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/detours")
     public ResponseEntity<Object> saveDetours(
             @RequestHeader Map<String, String> headers,
@@ -56,8 +56,8 @@ public class MobileController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Данный метод не позволяет создавать обходы");
     }
 
-    @ExecDuration
     @Transactional
+    @ExecDuration(params = {"defectObject"})
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/saveDefects")
     public ResponseEntity<Object> saveDefects(
             @RequestHeader Map<String, String> headers,
@@ -80,8 +80,8 @@ public class MobileController {
         return ResponseEntity.ok(result);
     }
 
-    @ExecDuration
     @Transactional
+    @ExecDuration(params = {"defectObject"})
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/updateDefects")
     public ResponseEntity<Object> updateDefects(
             @RequestHeader Map<String, String> headers,

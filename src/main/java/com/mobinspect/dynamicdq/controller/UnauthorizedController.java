@@ -38,7 +38,7 @@ public class UnauthorizedController {
         log.info("unauthorizedConfigs => {}", unauthorizedConfigs.toString());
     }
 
-    @ExecDuration
+    @ExecDuration(params = {"configName"})
     @PostMapping("/configuration/{configName}")
     public ResponseEntity<ObjectNode> getConfig(
             @PathVariable String configName) {
@@ -51,7 +51,7 @@ public class UnauthorizedController {
         else return ResponseEntity.ok().body(table);
     }
 
-    @ExecDuration
+    @ExecDuration(params = {"mode", "configName", "filter"})
     @PostMapping("/data/{mode}/{configName}")
     public Object getFlatData(
             @PathVariable TaskType mode,

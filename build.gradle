@@ -54,10 +54,10 @@ dependencies {
 	implementation ('com.irontechspace:spring-dynamicdq-lib:0.0.37')
 	implementation group: 'commons-io', name: 'commons-io', version: '2.8.0'
 
-	if (System.getenv("WITH_AUTH")?.toBoolean()){
+//	if (System.getenv("WITH_AUTH")?.toBoolean()){
 //		compile project(":auth-api")
-		implementation ("com.common:auth-api:0.2.2")
-	}
+	implementation ("com.common:auth-api:0.2.2")
+//	}
 
 	compile("org.projectlombok:lombok:${lombokVersion}")
 	// Для конфиг сервера
@@ -73,7 +73,6 @@ dependencies {
 	compile("org.springframework.retry:spring-retry:${springRetryVersion}")
 	compile("org.springframework.boot:spring-boot-starter-aop:${springBootVersion}")
 
-	compile("org.springframework.boot:spring-boot-starter-activemq:${springBootVersion}")
 	compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
 	compile("org.springframework.boot:spring-boot-starter-log4j2:${springBootVersion}")
 	compile("org.springframework.boot:spring-boot-starter-data-jdbc:${springBootVersion}")

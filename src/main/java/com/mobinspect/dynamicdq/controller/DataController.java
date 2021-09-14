@@ -59,7 +59,7 @@ public class DataController {
     @Autowired
     RepeaterService repeaterService;
 
-    @ExecDuration(param = "configName")
+    @ExecDuration(params = {"mode", "configName", "filter"})
     @RequestMapping(method = {RequestMethod.POST, RequestMethod.PUT}, value = "/{mode}/{configName}")
     public Object executeConfigController(
             @RequestHeader Map<String, String> headers,
@@ -101,26 +101,10 @@ public class DataController {
         // log.info("Mode: [{}] Config: [{}] Result.size: [{} rows]", mode.toString(), configName, result.size());
     }
 
-    @ExecDuration(param = "configName")
-    @PostMapping("/flat/count/{configName}")
-    @ApiOperation(value = "Получить кол-во записей в плоской таблице")
-    public ResponseEntity<Long> getFlatDataCount(
-            @RequestHeader Map<String, String> headers,
-            @PathVariable String configName,
-            @RequestBody JsonNode filter, Pageable pageable) {
-        Long result = queryService.getFlatDataCount(configName, Auth.getUserId(headers), Auth.getListUserRoles(headers), filter, pageable);
-        if (result == null)
-            return ResponseEntity.badRequest().build();
-        else {
-            log.info("[{}] Count result size : [{} rows]", configName, result);
-            return ResponseEntity.ok(result);
-        }
-    }
-
     @ApiOperation("Загрузить новый файл")
-    @ExecDuration(param = "configName")
+    @ExecDuration(params = {"configName"})
     @PostMapping(value = "/save/file/{configName}", consumes = {"multipart/form-data"})
-    public ResponseEntity<Object> uploadFile(
+    public Object uploadFile(
             @RequestHeader Map<String, String> headers,
             @PathVariable String configName,
             @RequestPart MultipartFile file,
@@ -129,7 +113,7 @@ public class DataController {
     }
 
     @ApiOperation("Получить файл по ИД")
-    @ExecDuration(param = "configName")
+    @ExecDuration(params = {"configName"})
     @GetMapping("/file/{configName}/{id}")
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String configName,
@@ -140,7 +124,7 @@ public class DataController {
     }
 
     @ApiOperation("Получить архив файлов по массиву ИД")
-    @ExecDuration(param = "configName")
+    @ExecDuration(params = {"configName"})
     @PostMapping("/file/zip/{configName}")
     public ResponseEntity<byte[]> downloadZip(
             @PathVariable String configName,

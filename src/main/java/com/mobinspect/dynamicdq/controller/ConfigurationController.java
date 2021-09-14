@@ -25,7 +25,7 @@ public class ConfigurationController {
     }
 
     @ApiOperation(value = "Получить конфигурацию по имени")
-    @ExecDuration(param = "configName")
+    @ExecDuration(params = {"configName"})
     @GetMapping("/{configName}")
     public ResponseEntity<ObjectNode> getConfig(
             @PathVariable String configName,
