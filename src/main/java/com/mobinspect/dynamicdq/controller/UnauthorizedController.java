@@ -56,7 +56,7 @@ public class UnauthorizedController {
     public Object getFlatData(
             @PathVariable TaskType mode,
             @PathVariable String configName,
-            @RequestBody JsonNode filter, Pageable pageable){
+            @RequestBody JsonNode filter, Pageable pageable) {
 
         if(!unauthorizedConfigs.contains(configName))
             throw new ForbiddenException("Конфигурация недоступна");
