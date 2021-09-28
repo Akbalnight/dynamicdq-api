@@ -70,7 +70,7 @@ public class DataController {
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort,
             Pageable pageable
-    ) throws JsonProcessingException {
+    ) {
         UUID userId = Auth.getUserId(headers);
         List<String> userRoles = Auth.getListUserRoles(headers);
 
@@ -82,7 +82,8 @@ public class DataController {
                     .body(filter)
                     .pageable(OBJECT_MAPPER.createObjectNode().put("page", page).put("size", size).put("sort", sort))
                     .output("return")
-                    .events(OBJECT_MAPPER.convertValue(filter.get("systemEvent"), TaskConfigEvents.class))
+//                    .events(OBJECT_MAPPER.convertValue(filter.get("systemEvent"), TaskConfigEvents.class))
+                    .events(filter.get("systemEvent"))
                     .build());
 
             configs.add(TaskConfig.builder()
