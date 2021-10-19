@@ -96,7 +96,7 @@ public class MobileController {
         if (defectObject.get("extraData") == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не указаны дополнительные данные по дефекту [extraData]");
 
-        ObjectNode defect = getObjectById("mobileDefects", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject.get("id").asText());
+        ObjectNode defect = getObjectById("mobileDefectsBKP", Auth.getUserId(headers), Auth.getListUserRoles(headers), defectObject.get("id").asText());
 
         ArrayNode extraData;
         String username = getUserName(headers);
