@@ -27,7 +27,7 @@ public class TaskController {
 
     @ExecDuration()
     @PostMapping("/sync")
-    public Object executeSyncTask( @RequestHeader Map<String, String> headers, @RequestBody List<TaskConfig> configs){
+    public Object executeSyncTask(@RequestHeader Map<String, String> headers, @RequestBody List<TaskConfig> configs){
         Task task = Task.builder()
                 .id(UUID.randomUUID())
                 .userId(Auth.getUserId(headers))
@@ -38,7 +38,7 @@ public class TaskController {
 
     @ExecDuration()
     @PostMapping("/async")
-    public UUID executeAsyncTask( @RequestHeader Map<String, String> headers, @RequestBody List<TaskConfig> configs){
+    public UUID executeAsyncTask(@RequestHeader Map<String, String> headers, @RequestBody List<TaskConfig> configs){
         Task task = Task.builder()
                 .id(UUID.randomUUID())
                 .userId(Auth.getUserId(headers))
