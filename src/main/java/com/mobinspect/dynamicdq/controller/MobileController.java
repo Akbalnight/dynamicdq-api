@@ -77,7 +77,7 @@ public class MobileController {
             }
         }
 
-        return ResponseEntity.ok(((ObjectNode) result).get("id").asText());
+        return ResponseEntity.ok(((ObjectNode) result).get("id"));
     }
 
     @Transactional
