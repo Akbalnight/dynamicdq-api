@@ -49,7 +49,7 @@ public class MobileController {
                 if (result == null)
                     throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Ошибка сохранения обхода");
                 else
-                    return ResponseEntity.ok(result);
+                    return ResponseEntity.ok(((ObjectNode) result).get("id").asText());
             } else
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Невозможно сохранить обход. Требуется заморозить обход");
         } else
@@ -77,7 +77,7 @@ public class MobileController {
             }
         }
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(((ObjectNode) result).get("id").asText());
     }
 
     @Transactional
@@ -125,7 +125,7 @@ public class MobileController {
                 fileService.saveFile("mobileDefectFileSave", Auth.getUserId(headers), Auth.getListUserRoles(headers), file, fileData);
             }
         }
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(defectObject.get("id"));
     }
 
     public static String getUserName(Map<String, String> headers) {
